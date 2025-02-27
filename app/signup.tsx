@@ -48,19 +48,27 @@ const SignUpScreen = (props: Props) => {
         <TouchableOpacity style={styles.btn}>
           <Text style={styles.btnTxt}>Create an Acount</Text>
         </TouchableOpacity>
-        <Text style={styles.loginTxt}>
-          {" "}
+        {/* <Text style={styles.loginTxt}>{" "}
           Already have an account?{" "}
           <Link href={"/signin"} asChild>
             <TouchableOpacity>
               <Text style={styles.loginTxtSpan}>SignIn</Text>
             </TouchableOpacity>
           </Link>
+        </Text> */}
+
+        <Text style={styles.loginTxt}>
+          Already have an account?{" "}
+          <Text
+            onPress={() => router.push("/signin")}
+            style={styles.loginTxtSpan}>
+            SignIn
+          </Text>
         </Text>
 
-        <View style={styles.divider}/>
+        <View style={styles.divider} />
 
-        <SocialLoginButtons emailHref={"/signin"}/>
+        <SocialLoginButtons emailHref={"/signin"} />
       </View>
     </GestureHandlerRootView>
   );
@@ -90,12 +98,12 @@ const styles = StyleSheet.create({
     alignSelf: "stretch",
     alignItems: "center",
     borderRadius: 5,
-    marginBottom: 20
+    marginBottom: 20,
   },
   btnTxt: {
     color: Colors.white,
     fontSize: 16,
-    fontWeight: 600
+    fontWeight: 600,
   },
   loginTxt: {
     marginBottom: 30,
@@ -106,11 +114,12 @@ const styles = StyleSheet.create({
   loginTxtSpan: {
     color: "#572fff", //primary color
     fontWeight: 600,
+    lineHeight: 24,
   },
   divider: {
     borderTopColor: Colors.gray,
     borderTopWidth: StyleSheet.hairlineWidth,
     width: "30%",
-    marginBottom: 30
-  }
+    marginBottom: 30,
+  },
 });
