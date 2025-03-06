@@ -1,22 +1,76 @@
-import { StyleSheet, Text, View } from 'react-native'
-import React from 'react'
+import { FlatList, Image, StyleSheet, Text, View } from "react-native";
+import React, { useEffect, useState } from "react";
+import axios from "axios";
+import { CategoryType } from "@/types/type";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { Stack } from "expo-router";
+import { useHeaderHeight } from "@react-navigation/elements";
+import { Colors } from "@/constants/Colors";
+import Animated, { FadeInDown } from "react-native-reanimated";
 
-type Props = {}
+type Props = {};
 
 const ExploreScreen = (props: Props) => {
-  return (
-    <View style={styles.container}>
-      <Text>Explore Screen</Text>
-    </View>
-  )
-}
+  const [categories, setCategories] = useState<CategoryType[]>([]);
+  const headderHeight = useHeaderHeight();
 
-export default ExploreScreen
+  useEffect(() => {
+    getCategories();
+  });
+
+  const getCategories = async () => {
+    const URL = "http://192.168.1.68:8000/categories";
+    const response = await axios.get(URL);
+
+    // console.log(response.data);
+    setCategories(response.data);
+  };
+
+  return (
+    <GestureHandlerRootView>
+      <Stack.Screen options={{ headerShown: true, headerTransparent: true }} />
+      <View style={[styles.container, { marginTop: headderHeight }]}>
+        <FlatList
+          data={categories}
+          keyExtractor={(item) => item.id.toString()}
+          showsVerticalScrollIndicator={false}
+          renderItem={({ item, index }) => (
+            <Animated.View
+              style={styles.itemWrapper}
+              entering={FadeInDown.delay(300 + index * 100).duration(500)}
+            >
+              <Text style={styles.itemTitle}>{item.name}</Text>
+              <Image
+                source={{ uri: item.image }}
+                style={{ width: 100, height: 100, borderRadius: 10 }}
+              />
+            </Animated.View>
+          )}
+        />
+      </View>
+    </GestureHandlerRootView>
+  );
+};
+
+export default ExploreScreen;
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center'
-  }
-})
+    paddingHorizontal: 20,
+  },
+  itemWrapper: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    backgroundColor: Colors.extraLightGray,
+    padding: 10,
+    borderRadius: 10,
+    marginBottom: 20,
+  },
+  itemTitle: {
+    fontSize: 16,
+    fontWeight: 500,
+    color: Colors.black,
+  },
+});
