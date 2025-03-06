@@ -12,7 +12,7 @@ type Props = {};
 
 const ExploreScreen = (props: Props) => {
   const [categories, setCategories] = useState<CategoryType[]>([]);
-  const headderHeight = useHeaderHeight();
+  const headerHeight = useHeaderHeight();
 
   useEffect(() => {
     getCategories();
@@ -28,8 +28,8 @@ const ExploreScreen = (props: Props) => {
 
   return (
     <GestureHandlerRootView>
-      <Stack.Screen options={{ headerShown: true, headerTransparent: true }} />
-      <View style={[styles.container, { marginTop: headderHeight }]}>
+      <Stack.Screen options={{ headerShown: true, headerTransparent: true }} />c
+      <View style={[styles.container, { marginTop: headerHeight }]}>
         <FlatList
           data={categories}
           keyExtractor={(item) => item.id.toString()}
