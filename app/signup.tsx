@@ -45,23 +45,21 @@ const SignUpScreen = (props: Props) => {
           secureTextEntry={true}
         />
 
-        <TouchableOpacity style={styles.btn}>
+        <TouchableOpacity
+          style={styles.btn}
+          onPress={() => {
+            router.dismissAll();
+            router.push("/(tabs)");
+          }}
+        >
           <Text style={styles.btnTxt}>Create an Acount</Text>
         </TouchableOpacity>
-        {/* <Text style={styles.loginTxt}>{" "}
-          Already have an account?{" "}
-          <Link href={"/signin"} asChild>
-            <TouchableOpacity>
-              <Text style={styles.loginTxtSpan}>SignIn</Text>
-            </TouchableOpacity>
-          </Link>
-        </Text> */}
-
         <Text style={styles.loginTxt}>
           Already have an account?{" "}
           <Text
             onPress={() => router.push("/signin")}
-            style={styles.loginTxtSpan}>
+            style={styles.loginTxtSpan}
+          >
             SignIn
           </Text>
         </Text>
@@ -110,11 +108,14 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#333",
     lineHeight: 24,
+    textAlignVertical: "center"
   },
   loginTxtSpan: {
     color: "#572fff", //primary color
+    fontSize: 14,
     fontWeight: 600,
     lineHeight: 24,
+    textAlignVertical: "center"
   },
   divider: {
     borderTopColor: Colors.gray,
