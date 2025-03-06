@@ -33,28 +33,28 @@ const HomeScreen = (props: Props) => {
   }, []);
 
   const getProducts = async () => {
-    const URL = "http://192.168.1.28:8000/products";
+    const URL = "http://192.168.1.68:8000/products";
     const response = await axios.get(URL);
 
-    console.log(response.data);
+    // console.log(response.data);
     setProducts(response.data);
     setIsLoading(false);
   };
 
   const getCategories = async () => {
-    const URL = "http://192.168.1.28:8000/categories";
+    const URL = "http://192.168.1.68:8000/categories";
     const response = await axios.get(URL);
 
-    console.log(response.data);
+    // console.log(response.data);
     setCategories(response.data);
     setIsLoading(false);
   };
 
   const getSaleProducts = async () => {
-    const URL = "http://192.168.1.28:8000/saleProducts";
+    const URL = "http://192.168.1.68:8000/saleProducts";
     const response = await axios.get(URL);
 
-    console.log(response.data);
+    // console.log(response.data);
     setSaleProducts(response.data);
     setIsLoading(false);
   };
