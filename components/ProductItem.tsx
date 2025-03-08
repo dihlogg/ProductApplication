@@ -16,7 +16,7 @@ import { Link } from "expo-router";
 type Props = {
   item: ProductType;
   index: number;
-  productType: "sale" | "regular"
+  productType: "sale" | "regular";
 };
 const width = Dimensions.get("window").width - 40;
 
@@ -25,7 +25,10 @@ const ProductItem = ({ item, index, productType }: Props) => {
     <Link
       href={{
         pathname: "/product-details/[id]",
-        params: { id: item.id.toString(), productType: productType },
+        params: {
+          id: item.id ?? Math.random().toString(),
+          productType: productType,
+        },
       }}
       asChild
     >
@@ -34,7 +37,15 @@ const ProductItem = ({ item, index, productType }: Props) => {
           style={styles.container}
           entering={FadeInDown.delay(300 + index * 100).duration(500)}
         >
-          <Image source={{ uri: item.images[0] }} style={styles.productImg} />
+          <Image
+            source={{
+              uri:
+                item?.productImages?.length > 0
+                  ? item.productImages[0].imageUrl
+                  : "https://cdnv2.tgdd.vn/mwg-static/tgdd/Banner/b1/ff/b1ff8943a6d5c41189d9a59591fd68b2.png",
+            }}
+            style={styles.productImg}
+          />
           <TouchableOpacity style={styles.bookmarkBtn}>
             <Ionicons name="heart-outline" size={22} color={Colors.black} />
           </TouchableOpacity>
@@ -45,7 +56,7 @@ const ProductItem = ({ item, index, productType }: Props) => {
               <Text style={styles.rating}>4.7</Text>
             </View>
           </View>
-          <Text style={styles.title}>{item.title}</Text>
+          <Text style={styles.title}>{item.name}</Text>
         </Animated.View>
       </TouchableOpacity>
     </Link>

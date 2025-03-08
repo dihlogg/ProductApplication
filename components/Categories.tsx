@@ -27,12 +27,15 @@ const Categories = ({ categories }: Props) => {
         data={categories}
         horizontal
         showsHorizontalScrollIndicator={false}
-        keyExtractor={(item) => item.id.toString()}
+        keyExtractor={(item) => item.id ?? Math.random().toString()}
         renderItem={({ index, item }) => (
           <TouchableOpacity>
             <View style={styles.item}>
-              <Image source={{ uri: item.image }} style={styles.itemImg} />
-              <Text>{item.name}</Text>
+              <Image
+                source={{ uri: `data:image/png;base64,${item.image}` }}
+                style={styles.itemImg}
+              />
+              <Text>{item.categoryName}</Text>
             </View>
           </TouchableOpacity>
         )}

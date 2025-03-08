@@ -24,13 +24,13 @@ const ProductDetails = (props: Props) => {
 
   useEffect(() => {
     getProductDetails();
-  });
+  }, []);
 
   const getProductDetails = async () => {
-    const URL =
-      productType === "sale"
-        ? `http://192.168.1.68:8000/saleProducts/${id}`
-        : `http://192.168.1.68:8000/products/${id}`;
+    const URL = `http://192.168.1.88:5117/ProductInfo/GetProductDetailsById/${id}`;
+      // productType === "sale"
+      //   ? `http://192.168.1.88:8000/saleProducts/${id}`
+      //   : `http://192.168.1.88:5117/ProductInfo/GetProductInfos/${id}`;
     const response = await axios.get(URL);
 
     setProduct(response.data);
@@ -58,7 +58,8 @@ const ProductDetails = (props: Props) => {
         <View>
           {product && (
             <Animated.View entering={FadeInDown.delay(300).duration(500)}>
-              <ImageSlider imageList={product.images} />
+              <ImageSlider imageList={product.productImages.map(img => img.imageUrl)} />
+
             </Animated.View>
           )}
           {product && (
@@ -86,7 +87,7 @@ const ProductDetails = (props: Props) => {
                 style={styles.title}
                 entering={FadeInDown.delay(700).duration(500)}
               >
-                {product.title}
+                {product.name}
               </Animated.Text>
 
               <Animated.View

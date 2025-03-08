@@ -27,7 +27,7 @@ const ProductList = ({ products, flatlist = true }: Props) => {
             justifyContent: "space-between",
             marginBottom: 20,
           }}
-          keyExtractor={(item) => item.id.toString()}
+          keyExtractor={(item) => item.id ?? Math.random().toString()}
           renderItem={({ index, item }) => (
             <ProductItem item={item} index={index} productType="regular"/>
           )}

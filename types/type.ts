@@ -1,21 +1,21 @@
 export interface ProductType {
-  id: number;
-  title: string;
+  id?: string | null;
+  name: string;
   price: number;
   description: string;
-  images: string[];
-  category: Category;
+  quantity: number;
+  categoryId: string;
+  productImages: ProductImage[];
 }
 
-interface Category {
-  id: number;
-  name: string;
-  image: string;
+export interface ProductImage {
+  imageUrl: string;
 }
 
 export interface CategoryType {
-  id: number;
-  name: string;
+  id?: string | null;
+  categoryName: string;
+  description: string;
   image: string;
 }
 

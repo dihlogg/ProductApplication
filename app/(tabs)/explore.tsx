@@ -16,10 +16,10 @@ const ExploreScreen = (props: Props) => {
 
   useEffect(() => {
     getCategories();
-  });
+  }, []);
 
   const getCategories = async () => {
-    const URL = "http://192.168.1.68:8000/categories";
+    const URL = "http://192.168.1.88:5117/Category/GetCategories";
     const response = await axios.get(URL);
 
     // console.log(response.data);
@@ -28,20 +28,20 @@ const ExploreScreen = (props: Props) => {
 
   return (
     <GestureHandlerRootView>
-      <Stack.Screen options={{ headerShown: true, headerTransparent: true }} />c
+      <Stack.Screen options={{ headerShown: true, headerTransparent: true }} />
       <View style={[styles.container, { marginTop: headerHeight }]}>
         <FlatList
           data={categories}
-          keyExtractor={(item) => item.id.toString()}
+          keyExtractor={(item) => item.id ?? Math.random().toString()}
           showsVerticalScrollIndicator={false}
           renderItem={({ item, index }) => (
             <Animated.View
               style={styles.itemWrapper}
               entering={FadeInDown.delay(300 + index * 100).duration(500)}
             >
-              <Text style={styles.itemTitle}>{item.name}</Text>
+              <Text style={styles.itemTitle}>{item.categoryName}</Text>
               <Image
-                source={{ uri: item.image }}
+                source={{ uri: `data:image/png;base64,${item.image}` }}
                 style={{ width: 100, height: 100, borderRadius: 10 }}
               />
             </Animated.View>

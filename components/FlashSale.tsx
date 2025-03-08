@@ -84,7 +84,7 @@ const FlashSale = ({ products }: Props) => {
         horizontal
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={{marginLeft: 20, paddingRight: 10}}
-        keyExtractor={(item) => item.id.toString()}
+        keyExtractor={(item) => item.id ?? Math.random().toString()}
         renderItem={({ index, item }) => (
             <View style={{marginRight: 20}}>
           <ProductItem index={index} item={item} productType="sale" />

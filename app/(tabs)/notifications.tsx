@@ -16,10 +16,10 @@ const NotificationsScreen = (props: Props) => {
   const headerHeight = useHeaderHeight();
   useEffect(() => {
     getNotifications();
-  });
+  }, []);
 
   const getNotifications = async () => {
-    const URL = "http://192.168.1.68:8000/notifications";
+    const URL = "http://192.168.1.88:8000/notifications";
     const response = await axios.get(URL);
 
     // console.log(response.data);

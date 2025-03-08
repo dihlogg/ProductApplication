@@ -24,10 +24,10 @@ const CartScreen = (props: Props) => {
 
   useEffect(() => {
     getCartData();
-  });
+  }, []);
 
   const getCartData = async () => {
-    const URL = "http://192.168.1.68:8000/cart";
+    const URL = "http://192.168.1.88:8000/cart";
     const response = await axios.get(URL);
 
     setCardItems(response.data);
