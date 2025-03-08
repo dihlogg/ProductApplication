@@ -33,7 +33,7 @@ const HomeScreen = (props: Props) => {
   }, []);
 
   const getProducts = async () => {
-    const URL = "http://192.168.1.68:8000/products";
+    const URL = "http://192.168.1.88:5117/ProductInfo/GetProductInfos";
     const response = await axios.get(URL);
 
     // console.log(response.data);
@@ -42,16 +42,15 @@ const HomeScreen = (props: Props) => {
   };
 
   const getCategories = async () => {
-    const URL = "http://192.168.1.68:8000/categories";
+    const URL = "http://192.168.1.88:5117/Category/GetCategories";
     const response = await axios.get(URL);
 
-    // console.log(response.data);
     setCategories(response.data);
     setIsLoading(false);
   };
 
   const getSaleProducts = async () => {
-    const URL = "http://192.168.1.68:8000/saleProducts";
+    const URL = "http://192.168.1.88:8000/saleProducts";
     const response = await axios.get(URL);
 
     // console.log(response.data);
@@ -80,7 +79,7 @@ const HomeScreen = (props: Props) => {
       <FlashSale products={saleProducts} />
       <View style={{ marginHorizontal: 20, marginBottom: 10 }}>
         <Image
-          source={require("@/assets/images/sale-banner.jpg")}
+          source={require("@/assets/images/702-LycNL.webp")}
           style={{ width: "100%", height: 150, borderRadius: 15 }}
         />
       </View>
