@@ -27,7 +27,7 @@ const ProductDetails = (props: Props) => {
   }, []);
 
   const getProductDetails = async () => {
-    const URL = `http://192.168.1.88:5117/ProductInfo/GetProductDetailsById/${id}`;
+    const URL = `http://192.168.1.134:5117/ProductInfo/GetProductDetailsById/${id}`;
       // productType === "sale"
       //   ? `http://192.168.1.88:8000/saleProducts/${id}`
       //   : `http://192.168.1.88:5117/ProductInfo/GetProductInfos/${id}`;
@@ -94,7 +94,9 @@ const ProductDetails = (props: Props) => {
                 style={styles.priceWrapper}
                 entering={FadeInDown.delay(900).duration(500)}
               >
-                <Text style={styles.price}>${product.price}</Text>
+                <Text style={styles.price}>
+                              {product.price.toLocaleString("vi-VN")} VNĐ
+                            </Text>
                 <View style={styles.priceDiscount}>
                   <Text style={styles.priceDiscountTxt}>6% Off</Text>
                 </View>

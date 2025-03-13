@@ -15,10 +15,9 @@ export function TabBar({ state, descriptors, navigation }: BottomTabBarProps) {
   const buttonWidth = dimensions.width / state.routes.length;
 
   useEffect(() => {
-    tabPositionX.value = withTiming(buttonWidth * state.index, {
-      duration: 200,
-    });
-  }, [state.index]);
+    const newPosition = buttonWidth * state.index;
+    tabPositionX.value = withTiming(newPosition, { duration: 200 });
+  }, [state.index, buttonWidth]);
 
   const onTabBarLayout = (e: LayoutChangeEvent) => {
     setDimensions({

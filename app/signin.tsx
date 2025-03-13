@@ -1,4 +1,4 @@
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Keyboard, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, TouchableWithoutFeedback, View } from "react-native";
 import React from "react";
 import { Link, router, Stack } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
@@ -15,55 +15,54 @@ type Props = {};
 const SignInScreen = (props: Props) => {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <Stack.Screen
-        options={{
-          headerTitle: "Sign Up",
-          headerLeft: () => (
-            <TouchableOpacity onPress={() => router.back()}>
-              <Ionicons name="close" size={24} color="#333" />
-            </TouchableOpacity>
-          ),
-        }}
-      />
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={{ flex: 1 }}
+      >
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+          <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
+            <View style={styles.container}>
+              <Text style={styles.title}>Login to Your Account</Text>
 
-      <View style={styles.container}>
-        <Text style={styles.title}>Login to Your Account</Text>
-        <InputField
-          placeholder="Email Address"
-          placeholderTextColor={Colors.gray}
-          autoCapitalize="none"
-          keyboardType="email-address"
-        />
-        <InputField
-          placeholder="Password"
-          placeholderTextColor={Colors.gray}
-          secureTextEntry={true}
-        />
+              <InputField
+                placeholder="Email Address"
+                placeholderTextColor={Colors.gray}
+                autoCapitalize="none"
+                keyboardType="email-address"
+              />
+              <InputField
+                placeholder="Password"
+                placeholderTextColor={Colors.gray}
+                secureTextEntry={true}
+              />
 
-        <TouchableOpacity
-          style={styles.btn}
-          onPress={() => {
-            router.dismissAll();
-            router.push("/(tabs)");
-          }}
-        >
-          <Text style={styles.btnTxt}>Login</Text>
-        </TouchableOpacity>
-        <Text style={styles.loginTxt}>
-          {" "}
-          Don't have an account?{" "}
-          <Text
-            onPress={() => router.push("/signin")}
-            style={styles.loginTxtSpan}
-          >
-            SignIn
-          </Text>
-        </Text>
+              <TouchableOpacity
+                style={styles.btn}
+                onPress={() => {
+                  router.dismissAll();
+                  router.push("/(tabs)");
+                }}
+              >
+                <Text style={styles.btnTxt}>Login</Text>
+              </TouchableOpacity>
 
-        <View style={styles.divider} />
+              <Text style={styles.loginTxt}>
+                Don't have an account?{" "}
+                <Text
+                  onPress={() => router.push("/signup")}
+                  style={styles.loginTxtSpan}
+                >
+                  SignUp
+                </Text>
+              </Text>
 
-        <SocialLoginButtons emailHref={"/signin"} />
-      </View>
+              <View style={styles.divider} />
+
+              <SocialLoginButtons emailHref={"/signin"} />
+            </View>
+          </ScrollView>
+        </TouchableWithoutFeedback>
+      </KeyboardAvoidingView>
     </GestureHandlerRootView>
   );
 };
