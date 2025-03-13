@@ -29,11 +29,10 @@ const HomeScreen = (props: Props) => {
   useEffect(() => {
     getCategories();
     getProducts();
-    getSaleProducts();
   }, []);
 
   const getProducts = async () => {
-    const URL = "http://192.168.1.88:5117/ProductInfo/GetProductInfos";
+    const URL = "http://192.168.1.134:5117/ProductInfo/GetProductInfos";
     const response = await axios.get(URL);
 
     // console.log(response.data);
@@ -42,21 +41,21 @@ const HomeScreen = (props: Props) => {
   };
 
   const getCategories = async () => {
-    const URL = "http://192.168.1.88:5117/Category/GetCategories";
+    const URL = "http://192.168.1.134:5117/Category/GetCategories";
     const response = await axios.get(URL);
 
     setCategories(response.data);
     setIsLoading(false);
   };
 
-  const getSaleProducts = async () => {
-    const URL = "http://192.168.1.88:8000/saleProducts";
-    const response = await axios.get(URL);
+  // const getSaleProducts = async () => {
+  //   const URL = "http://10.60.200.155:8000/saleProducts";
+  //   const response = await axios.get(URL);
 
-    // console.log(response.data);
-    setSaleProducts(response.data);
-    setIsLoading(false);
-  };
+  //   // console.log(response.data);
+  //   setSaleProducts(response.data);
+  //   setIsLoading(false);
+  // };
 
   if (isLoading) {
     return (

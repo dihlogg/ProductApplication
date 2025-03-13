@@ -20,7 +20,7 @@ const WelcomeScreen = (props: Props) => {
     <>
       <Stack.Screen options={{ headerShown: false }} />
       <ImageBackground
-        source={require("../assets/images/ecommerce-splash.jpg")}
+        source={require("../assets/images/ecommerce-vector.png")}
         style={{ flex: 1 }}
         resizeMode="cover"
       >
@@ -38,7 +38,7 @@ const WelcomeScreen = (props: Props) => {
                 style={styles.title}
                 entering={FadeInRight.delay(300).duration(300).springify()}
               >
-                Shop Application
+                Tech Shop
               </Animated.Text>
               <Animated.Text
                 style={styles.description}

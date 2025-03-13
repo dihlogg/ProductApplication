@@ -20,21 +20,25 @@ type Props = {
 
 const TabBarButton = (props: Props) => {
   const { onPress, onLongPress, isFocused, label, routeName } = props;
+  const IconComponent = icon[routeName as keyof typeof icon];
+  if (!IconComponent) {
+    console.warn(`No icon found for route: ${routeName}`);
+    return null;
+  }
   return (
     <TouchableOpacity
       onPress={onPress}
       onLongPress={onLongPress}
       style={styles.tabBarBtn}
     >
-      {routeName == "cart" && (
-        /* cart badge here */
+      {routeName === "cart" && (
         <View style={styles.badgeWrapper}>
           <Text style={styles.badgeText}>1</Text>
         </View>
       )}
-      {icon[routeName]({
-        color: isFocused ? Colors.primary : Colors.black,
-      })}
+      
+      <IconComponent color={isFocused ? Colors.primary : Colors.black} />
+      
       <Text style={{ color: isFocused ? "#673ab7" : "#222" }}>{label}</Text>
     </TouchableOpacity>
   );

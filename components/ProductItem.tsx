@@ -45,15 +45,17 @@ const ProductItem = ({ item, index, productType }: Props) => {
                   : "https://cdnv2.tgdd.vn/mwg-static/tgdd/Banner/b1/ff/b1ff8943a6d5c41189d9a59591fd68b2.png",
             }}
             style={styles.productImg}
+            resizeMode="cover"
           />
           <TouchableOpacity style={styles.bookmarkBtn}>
             <Ionicons name="heart-outline" size={22} color={Colors.black} />
           </TouchableOpacity>
           <View style={styles.productInfo}>
-            <Text style={styles.price}>${item.price}</Text>
+            <Text style={styles.price}>
+              {item.price.toLocaleString("vi-VN")} VNĐ
+            </Text>
             <View style={styles.ratingWrapper}>
-              <Ionicons name="star" size={20} color={"#D4AF37"} />
-              <Text style={styles.rating}>4.7</Text>
+              <Ionicons name="star" size={16} color={"#D4AF37"} />
             </View>
           </View>
           <Text style={styles.title}>{item.name}</Text>
@@ -67,11 +69,11 @@ export default ProductItem;
 
 const styles = StyleSheet.create({
   container: {
-    width: width / 2 - 10,
+    width: width / 2 - 15,
   },
   productImg: {
     width: "100%",
-    height: 200,
+    aspectRatio: 1,
     borderRadius: 15,
     marginBottom: 10,
   },
@@ -95,7 +97,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   price: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: 700,
     color: Colors.primary,
   },

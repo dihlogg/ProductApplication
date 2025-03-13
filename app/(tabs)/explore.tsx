@@ -19,7 +19,7 @@ const ExploreScreen = (props: Props) => {
   }, []);
 
   const getCategories = async () => {
-    const URL = "http://192.168.1.88:5117/Category/GetCategories";
+    const URL = "http://192.168.1.134:5117/Category/GetCategories";
     const response = await axios.get(URL);
 
     // console.log(response.data);

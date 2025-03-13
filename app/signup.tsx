@@ -1,4 +1,4 @@
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { StyleSheet, Text, TouchableOpacity, View, KeyboardAvoidingView, Platform, Keyboard, TouchableWithoutFeedback, ScrollView } from "react-native";
 import React from "react";
 import { Link, router, Stack } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
@@ -7,7 +7,6 @@ import {
   TextInput,
   GestureHandlerRootView,
 } from "react-native-gesture-handler";
-import SocialLoginButtons from "@/components/SocialLoginButtons";
 import InputField from "@/components/InputField";
 
 type Props = {};
@@ -15,59 +14,65 @@ type Props = {};
 const SignUpScreen = (props: Props) => {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <Stack.Screen
-        options={{
-          headerTitle: "Sign Up",
-          headerLeft: () => (
-            <TouchableOpacity onPress={() => router.back()}>
-              <Ionicons name="close" size={24} color="#333" />
-            </TouchableOpacity>
-          ),
-        }}
-      />
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={{ flex: 1 }}
+      >
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+          <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
+            <View style={styles.container}>
+              <Text style={styles.title}>Create an Account</Text>
 
-      <View style={styles.container}>
-        <Text style={styles.title}>Create an Account</Text>
-        <InputField
-          placeholder="Email Address"
-          placeholderTextColor={Colors.gray}
-          autoCapitalize="none"
-          keyboardType="email-address"
-        />
-        <InputField
-          placeholder="Password"
-          placeholderTextColor={Colors.gray}
-          secureTextEntry={true}
-        />
-        <InputField
-          placeholder="Confirm Password"
-          placeholderTextColor={Colors.gray}
-          secureTextEntry={true}
-        />
+              <InputField
+                placeholder="Email"
+                placeholderTextColor={Colors.gray}
+                autoCapitalize="none"
+                keyboardType="email-address"
+              />
+              <InputField
+                placeholder="Password"
+                placeholderTextColor={Colors.gray}
+                secureTextEntry={true}
+              />
+              <InputField
+                placeholder="Full Name"
+                placeholderTextColor={Colors.gray}
+              />
+              <InputField
+                placeholder="Address"
+                placeholderTextColor={Colors.gray}
+              />
+              <InputField
+                placeholder="Phone Number"
+                placeholderTextColor={Colors.gray}
+                keyboardType="phone-pad"
+              />
 
-        <TouchableOpacity
-          style={styles.btn}
-          onPress={() => {
-            router.dismissAll();
-            router.push("/(tabs)");
-          }}
-        >
-          <Text style={styles.btnTxt}>Create an Acount</Text>
-        </TouchableOpacity>
-        <Text style={styles.loginTxt}>
-          Already have an account?{" "}
-          <Text
-            onPress={() => router.push("/signin")}
-            style={styles.loginTxtSpan}
-          >
-            SignIn
-          </Text>
-        </Text>
+              <TouchableOpacity
+                style={styles.btn}
+                onPress={() => {
+                  router.dismissAll();
+                  router.push("/(tabs)");
+                }}
+              >
+                <Text style={styles.btnTxt}>Create an Account</Text>
+              </TouchableOpacity>
 
-        <View style={styles.divider} />
+              <Text style={styles.loginTxt}>
+                Already have an account?{" "}
+                <Text
+                  onPress={() => router.push("/signin")}
+                  style={styles.loginTxtSpan}
+                >
+                  SignIn
+                </Text>
+              </Text>
 
-        <SocialLoginButtons emailHref={"/signin"} />
-      </View>
+              <View style={styles.divider} />
+            </View>
+          </ScrollView>
+        </TouchableWithoutFeedback>
+      </KeyboardAvoidingView>
     </GestureHandlerRootView>
   );
 };

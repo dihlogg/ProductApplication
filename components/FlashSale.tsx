@@ -65,7 +65,7 @@ const FlashSale = ({ products }: Props) => {
     <View style={styles.container}>
       <View style={styles.titleWrapper}>
         <View style={styles.timerWrapper}>
-          <Text style={styles.title}>Flash Sale</Text>
+          <Text style={styles.title}>Popular Products</Text>
           <View style={styles.timer}>
             <Ionicons name="time-outline" size={16} color={Colors.black} />
             <Text style={styles.timerTxt}>{`${formatTime(
@@ -108,7 +108,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 20,
   },
   title: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: 600,
     letterSpacing: 0.6,
     color: Colors.black,
