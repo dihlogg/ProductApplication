@@ -27,7 +27,7 @@ const CartScreen = (props: Props) => {
   }, []);
 
   const getCartData = async () => {
-    const URL = "http://192.168.1.134:5117/CartInfo/GetCartInfos";
+    const URL = "http://192.168.1.142:5117/CartInfo/GetCartInfos";
     const response = await axios.get(URL);
 
     setCardItems(response.data);

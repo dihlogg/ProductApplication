@@ -6,7 +6,7 @@ import {
   View,
 } from "react-native";
 import React from "react";
-import { Link, Stack } from "expo-router";
+import { Link, router, Stack } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import Google from "@/assets/images/google-logo.svg";
@@ -50,13 +50,13 @@ const WelcomeScreen = (props: Props) => {
               <SocialLoginButtons emailHref={"/signup"} />
 
               <Text style={styles.loginTxt}>
-                {" "}
                 Already have an account?{" "}
-                <Link href={"/signin"} asChild>
-                  <TouchableOpacity>
-                    <Text style={styles.loginTxtSpan}>SignIn</Text>
-                  </TouchableOpacity>
-                </Link>
+                <Text
+                  onPress={() => router.push("/signin")}
+                  style={styles.loginTxtSpan}
+                >
+                  SignIn
+                </Text>
               </Text>
             </View>
           </LinearGradient>
@@ -103,13 +103,17 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   loginTxt: {
-    marginTop: 30,
+    marginBottom: 30,
     fontSize: 14,
     color: "#333",
     lineHeight: 24,
+    textAlignVertical: "center",
   },
   loginTxtSpan: {
     color: "#572fff", //primary color
+    fontSize: 14,
     fontWeight: 600,
+    lineHeight: 24,
+    textAlignVertical: "center",
   },
 });

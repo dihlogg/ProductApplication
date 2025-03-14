@@ -1,14 +1,31 @@
 import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { useHeaderHeight } from "@react-navigation/elements";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
-import { Stack } from "expo-router";
+import { Stack, useLocalSearchParams } from "expo-router";
 import { Colors } from "@/constants/Colors";
 import { Ionicons } from "@expo/vector-icons";
+import { RegisterRequest } from "@/types/register-request";
+import axios from "axios";
 
 type Props = {};
 
 const ProfileScreen = (props: Props) => {
+  const { id } = useLocalSearchParams();
+  const [userInfo, setUserInfo] = useState<RegisterRequest>();
+
+  useEffect(() => {
+    if (id) {
+      getUserDetails(id);
+    }
+  }, [id]);
+
+  const getUserDetails = async (id: string | string[]) => {
+    const URL = `http://192.168.1.142:5117/UserInfo/GetUserInfoByIdAsync/${id}`;
+    const response = await axios.get(URL);
+
+    setUserInfo(response.data);
+  };
   const headerHeight = useHeaderHeight();
   return (
     <GestureHandlerRootView>
@@ -21,7 +38,9 @@ const ProfileScreen = (props: Props) => {
             }}
             style={{ width: 100, height: 100, borderRadius: 50 }}
           />
-          <Text style={styles.userName}>Đình Long</Text>
+          <Text style={styles.userName}>
+            {userInfo?.userFullName || "Guest"}
+          </Text>
         </View>
         <View style={styles.buttonWrapper}>
           <TouchableOpacity style={styles.button}>

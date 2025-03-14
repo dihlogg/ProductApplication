@@ -1,5 +1,16 @@
-import { Keyboard, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, TouchableWithoutFeedback, View } from "react-native";
-import React from "react";
+import {
+  Alert,
+  Keyboard,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  TouchableWithoutFeedback,
+  View,
+} from "react-native";
+import React, { useEffect, useState } from "react";
 import { Link, router, Stack } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { Colors } from "@/constants/Colors";
@@ -9,61 +20,101 @@ import {
 } from "react-native-gesture-handler";
 import SocialLoginButtons from "@/components/SocialLoginButtons";
 import InputField from "@/components/InputField";
+import { LoginRequest } from "@/types/login-request";
+import axios from "axios";
+import { RegisterRequest } from "@/types/register-request";
 
 type Props = {};
 
 const SignInScreen = (props: Props) => {
+  const [userName, setUserName] = useState("");
+  const [passWord, setPassWord] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const handleLogin = async () => {
+    if (!userName || !passWord) {
+      Alert.alert("Error", "Please enter both username and password.");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const loginData: LoginRequest = { userName, passWord };
+
+      const response = await axios.post<RegisterRequest>(
+        "http://192.168.1.142:5117/UserInfo/LoginUser",
+        loginData
+      );
+
+      if (response.status === 200 && response.data?.id) {
+        const userId = response.data.id;
+        console.log("User ID from API:", userId);
+
+        Alert.alert("Success", "Login successful!");
+        router.dismissAll();
+        router.push({ pathname: "/(tabs)/profile", params: { id: userId } });
+      } else {
+        Alert.alert("Error", "Invalid credentials");
+      }
+    } catch (error) {
+      console.error("Login error:", error);
+      Alert.alert("Error", "Something went wrong. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={{ flex: 1 }}
       >
-        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-          <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
-            <View style={styles.container}>
-              <Text style={styles.title}>Login to Your Account</Text>
+        <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
+          <View style={styles.container}>
+            <Text style={styles.title}>Login to Your Account</Text>
 
-              <InputField
-                placeholder="Email Address"
-                placeholderTextColor={Colors.gray}
-                autoCapitalize="none"
-                keyboardType="email-address"
-              />
-              <InputField
-                placeholder="Password"
-                placeholderTextColor={Colors.gray}
-                secureTextEntry={true}
-              />
+            <InputField
+              placeholder="Username"
+              value={userName}
+              onChangeText={setUserName}
+              placeholderTextColor={Colors.gray}
+              autoCapitalize="none"
+            />
+            <InputField
+              placeholder="Password"
+              value={passWord}
+              onChangeText={setPassWord}
+              placeholderTextColor={Colors.gray}
+              secureTextEntry={true}
+            />
 
-              <TouchableOpacity
-                style={styles.btn}
-                onPress={() => {
-                  router.dismissAll();
-                  router.push("/(tabs)");
-                }}
-              >
-                <Text style={styles.btnTxt}>Login</Text>
-              </TouchableOpacity>
-
-              <Text style={styles.loginTxt}>
-                Don't have an account?{" "}
-                <Text
-                  onPress={() => router.push("/signup")}
-                  style={styles.loginTxtSpan}
-                >
-                  SignUp
-                </Text>
+            <TouchableOpacity
+              style={styles.btn}
+              onPress={handleLogin}
+              disabled={loading}
+            >
+              <Text style={styles.btnTxt}>
+                {loading ? "Logging in..." : "Login"}
               </Text>
+            </TouchableOpacity>
 
-              <View style={styles.divider} />
+            <Text style={styles.loginTxt}>
+              Don't have an account?{" "}
+              <Text
+                onPress={() => router.push("/signup")}
+                style={styles.loginTxtSpan}
+              >
+                SignUp
+              </Text>
+            </Text>
 
-              <SocialLoginButtons emailHref={"/signin"} />
-            </View>
-          </ScrollView>
-        </TouchableWithoutFeedback>
+            <View style={styles.divider} />
+            <SocialLoginButtons emailHref={"/signin"} />
+          </View>
+        </ScrollView>
       </KeyboardAvoidingView>
-    </GestureHandlerRootView>
+    </TouchableWithoutFeedback>
   );
 };
 

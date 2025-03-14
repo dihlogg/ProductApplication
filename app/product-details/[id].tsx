@@ -27,7 +27,7 @@ const ProductDetails = (props: Props) => {
   }, []);
 
   const getProductDetails = async () => {
-    const URL = `http://192.168.1.134:5117/ProductInfo/GetProductDetailsById/${id}`;
+    const URL = `http://192.168.1.142:5117/ProductInfo/GetProductDetailsById/${id}`;
       // productType === "sale"
       //   ? `http://192.168.1.88:8000/saleProducts/${id}`
       //   : `http://192.168.1.88:5117/ProductInfo/GetProductInfos/${id}`;
