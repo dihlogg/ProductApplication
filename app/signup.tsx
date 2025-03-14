@@ -1,5 +1,16 @@
-import { StyleSheet, Text, TouchableOpacity, View, KeyboardAvoidingView, Platform, Keyboard, TouchableWithoutFeedback, ScrollView } from "react-native";
-import React from "react";
+import {
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+  KeyboardAvoidingView,
+  Platform,
+  Keyboard,
+  TouchableWithoutFeedback,
+  ScrollView,
+  Alert,
+} from "react-native";
+import React, { useState } from "react";
 import { Link, router, Stack } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { Colors } from "@/constants/Colors";
@@ -8,72 +19,141 @@ import {
   GestureHandlerRootView,
 } from "react-native-gesture-handler";
 import InputField from "@/components/InputField";
+import { RegisterRequest } from "@/types/register-request";
+import axios from "axios";
 
 type Props = {};
 
-const SignUpScreen = (props: Props) => {
+const SignUpScreen = () => {
+  const [userName, setUserName] = useState("");
+  const [userPassword, setUserPassword] = useState("");
+  const [userFullName, setUserFullName] = useState("");
+  const [userAddress, setUserAddress] = useState("");
+  const [userPhone, setUserPhone] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const handleRegister = async () => {
+    if (
+      !userName ||
+      !userPassword ||
+      !userFullName ||
+      !userAddress ||
+      !userPhone
+    ) {
+      Alert.alert("Error", "Please fill in all fields.");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const registerData: RegisterRequest = {
+        userName,
+        userPassword,
+        userFullName,
+        userAddress,
+        userPhone,
+      };
+
+      const response = await axios.post(
+        "http://192.168.1.142:5117/UserInfo/PostUserInfo",
+        registerData,
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      console.log("Register response:", response.data);
+
+      if (response.status === 200) {
+        Alert.alert("Success", "Account created successfully!");
+        router.dismissAll();
+        router.push("/signin");
+      } else {
+        Alert.alert("Error", "Registration failed.");
+      }
+    } catch (error: any) {
+      console.error("Register error:", error.response?.data || error.message);
+      Alert.alert(
+        "Error",
+        error.response?.data?.message ||
+          "Something went wrong. Please try again."
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={{ flex: 1 }}
       >
-        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-          <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
-            <View style={styles.container}>
-              <Text style={styles.title}>Create an Account</Text>
+        <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
+          <View style={styles.container}>
+            <Text style={styles.title}>Create an Account</Text>
 
-              <InputField
-                placeholder="Email"
-                placeholderTextColor={Colors.gray}
-                autoCapitalize="none"
-                keyboardType="email-address"
-              />
-              <InputField
-                placeholder="Password"
-                placeholderTextColor={Colors.gray}
-                secureTextEntry={true}
-              />
-              <InputField
-                placeholder="Full Name"
-                placeholderTextColor={Colors.gray}
-              />
-              <InputField
-                placeholder="Address"
-                placeholderTextColor={Colors.gray}
-              />
-              <InputField
-                placeholder="Phone Number"
-                placeholderTextColor={Colors.gray}
-                keyboardType="phone-pad"
-              />
+            <InputField
+              placeholder="Username"
+              value={userName}
+              onChangeText={setUserName}
+              placeholderTextColor={Colors.gray}
+              autoCapitalize="none"
+            />
+            <InputField
+              placeholder="Password"
+              value={userPassword}
+              onChangeText={setUserPassword}
+              placeholderTextColor={Colors.gray}
+              secureTextEntry={true}
+            />
+            <InputField
+              placeholder="Full Name"
+              value={userFullName}
+              onChangeText={setUserFullName}
+              placeholderTextColor={Colors.gray}
+            />
+            <InputField
+              placeholder="Address"
+              value={userAddress}
+              onChangeText={setUserAddress}
+              placeholderTextColor={Colors.gray}
+            />
+            <InputField
+              placeholder="Phone Number"
+              value={userPhone}
+              onChangeText={setUserPhone}
+              placeholderTextColor={Colors.gray}
+              keyboardType="phone-pad"
+            />
 
-              <TouchableOpacity
-                style={styles.btn}
-                onPress={() => {
-                  router.dismissAll();
-                  router.push("/(tabs)");
-                }}
-              >
-                <Text style={styles.btnTxt}>Create an Account</Text>
-              </TouchableOpacity>
-
-              <Text style={styles.loginTxt}>
-                Already have an account?{" "}
-                <Text
-                  onPress={() => router.push("/signin")}
-                  style={styles.loginTxtSpan}
-                >
-                  SignIn
-                </Text>
+            <TouchableOpacity
+              style={styles.btn}
+              onPress={handleRegister}
+              disabled={loading}
+            >
+              <Text style={styles.btnTxt}>
+                {loading ? "Registering..." : "Create an Account"}
               </Text>
+            </TouchableOpacity>
 
-              <View style={styles.divider} />
-            </View>
-          </ScrollView>
-        </TouchableWithoutFeedback>
+            <Text style={styles.loginTxt}>
+              Already have an account?{" "}
+              <Text
+                onPress={() => router.push("/signin")}
+                style={styles.loginTxtSpan}
+              >
+                Sign In
+              </Text>
+            </Text>
+
+            <View style={styles.divider} />
+          </View>
+        </ScrollView>
       </KeyboardAvoidingView>
-    </GestureHandlerRootView>
+    </TouchableWithoutFeedback>
   );
 };
 
@@ -113,14 +193,14 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#333",
     lineHeight: 24,
-    textAlignVertical: "center"
+    textAlignVertical: "center",
   },
   loginTxtSpan: {
     color: "#572fff", //primary color
     fontSize: 14,
     fontWeight: 600,
     lineHeight: 24,
-    textAlignVertical: "center"
+    textAlignVertical: "center",
   },
   divider: {
     borderTopColor: Colors.gray,

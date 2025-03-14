@@ -32,7 +32,7 @@ const HomeScreen = (props: Props) => {
   }, []);
 
   const getProducts = async () => {
-    const URL = "http://192.168.1.134:5117/ProductInfo/GetProductInfos";
+    const URL = "http://192.168.1.142:5117/ProductInfo/GetProductInfos";
     const response = await axios.get(URL);
 
     // console.log(response.data);
@@ -41,7 +41,7 @@ const HomeScreen = (props: Props) => {
   };
 
   const getCategories = async () => {
-    const URL = "http://192.168.1.134:5117/Category/GetCategories";
+    const URL = "http://192.168.1.142:5117/Category/GetCategories";
     const response = await axios.get(URL);
 
     setCategories(response.data);
