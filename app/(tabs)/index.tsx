@@ -17,7 +17,7 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import ProductList from "@/components/ProductList";
 import Categories from "@/components/Categories";
 import FlashSale from "@/components/FlashSale";
-import { API_ENDPOINTS } from "@/service/config";
+import { API_ENDPOINTS } from "@/service/apiService";
 
 type Props = {};
 
