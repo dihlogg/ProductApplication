@@ -4,6 +4,7 @@ import {
   StyleSheet,
   TouchableOpacity,
   ScrollView,
+  Alert,
 } from "react-native";
 import React, { useEffect, useState } from "react";
 import { router, Stack, useLocalSearchParams } from "expo-router";
@@ -15,11 +16,13 @@ import { Colors } from "@/constants/Colors";
 import { useHeaderHeight } from "@react-navigation/elements";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import Animated, { FadeInDown, SlideInDown } from "react-native-reanimated";
-import { API_ENDPOINTS } from "@/service/config";
+import { API_ENDPOINTS } from "@/service/apiService";
+import { addToCart } from "@/service/cartService";
 
 type Props = {};
 
 const ProductDetails = (props: Props) => {
+  const headerHeight = useHeaderHeight();
   const { id, productType } = useLocalSearchParams();
   const [product, setProduct] = useState<ProductType>();
 
@@ -31,7 +34,16 @@ const ProductDetails = (props: Props) => {
     const response = await axios.get(`${API_ENDPOINTS.GET_PRODUCT_DETAILS}/${id}`);
     setProduct(response.data);
   };
-  const headerHeight = useHeaderHeight();
+  const handleAddToCart = async () => {
+    if (product?.id) {
+      const success = await addToCart(product.id);
+      if (success) {
+        Alert.alert("Success", "Product added to cart!");
+      } else {
+        Alert.alert("Error", "Failed to add product to cart.");
+      }
+    }
+  };
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <Stack.Screen
@@ -110,81 +122,6 @@ const ProductDetails = (props: Props) => {
                 style={styles.productVariationWrapper}
                 entering={FadeInDown.delay(1300).duration(500)}
               >
-                {/* <View style={styles.productVariationType}>
-                  <Text style={styles.productVariationTitle}>Color</Text>
-                  <View style={styles.productVariationValueWrapper}>
-                    <View
-                      style={{
-                        borderColor: Colors.primary,
-                        borderWidth: 1,
-                        borderRadius: 100,
-                        padding: 2,
-                      }}
-                    >
-                      <View
-                        style={[
-                          styles.productVariationColorValue,
-                          { backgroundColor: "#D4AF37" },
-                        ]}
-                      ></View>
-                    </View>
-                    <View
-                      style={[
-                        styles.productVariationColorValue,
-                        { backgroundColor: "#333" },
-                      ]}
-                    ></View>
-                    <View
-                      style={[
-                        styles.productVariationColorValue,
-                        { backgroundColor: "#8bc34a" },
-                      ]}
-                    ></View>
-                    <View
-                      style={[
-                        styles.productVariationColorValue,
-                        { backgroundColor: "#2196f3" },
-                      ]}
-                    ></View>
-                    <View
-                      style={[
-                        styles.productVariationColorValue,
-                        { backgroundColor: "#f44336" },
-                      ]}
-                    ></View>
-                  </View>
-                </View>
-
-                <View style={styles.productVariationType}>
-                  <Text style={styles.productVariationTitle}>Size</Text>
-                  <View style={styles.productVariationValueWrapper}>
-                    <View
-                      style={[
-                        styles.productVariationSizeValue,
-                        { borderColor: Colors.primary },
-                      ]}
-                    >
-                      <Text
-                        style={[
-                          styles.productVariationSizeValueText,
-                          { color: Colors.primary, fontWeight: "bold" },
-                        ]}
-                      >
-                        S
-                      </Text>
-                    </View>
-                    <View style={styles.productVariationSizeValue}>
-                      <Text style={styles.productVariationSizeValueText}>
-                        M
-                      </Text>
-                    </View>
-                    <View style={styles.productVariationSizeValue}>
-                      <Text style={styles.productVariationSizeValueText}>
-                        L
-                      </Text>
-                    </View>
-                  </View>
-                </View> */}
               </Animated.View>
             </View>
           )}
@@ -203,6 +140,7 @@ const ProductDetails = (props: Props) => {
               borderWidth: 1,
             },
           ]}
+          onPress={handleAddToCart}
         >
           <Ionicons name="cart-outline" size={20} color={Colors.primary} />
           <Text style={[styles.buttonText, { color: Colors.primary }]}>

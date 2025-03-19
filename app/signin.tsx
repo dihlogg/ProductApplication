@@ -21,7 +21,7 @@ import InputField from "@/components/InputField";
 import { LoginRequest } from "@/types/login-request";
 import axios from "axios";
 import { RegisterRequest } from "@/types/register-request";
-import { API_ENDPOINTS } from "@/service/config";
+import { API_ENDPOINTS } from "@/service/apiService";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 type Props = {};

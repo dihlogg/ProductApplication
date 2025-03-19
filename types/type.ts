@@ -7,6 +7,9 @@ export interface ProductType {
   categoryId: string;
   productImages: ProductImage[];
 }
+export interface CartProductType extends ProductType {
+  cartQuantity: number; // Số lượng sản phẩm trong giỏ hàng
+}
 
 export interface ProductImage {
   imageUrl: string;

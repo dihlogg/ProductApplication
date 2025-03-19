@@ -7,7 +7,7 @@ import { Stack } from "expo-router";
 import { useHeaderHeight } from "@react-navigation/elements";
 import { Colors } from "@/constants/Colors";
 import Animated, { FadeInDown } from "react-native-reanimated";
-import { API_ENDPOINTS } from "@/service/config";
+import { API_ENDPOINTS } from "@/service/apiService";
 
 type Props = {};
 

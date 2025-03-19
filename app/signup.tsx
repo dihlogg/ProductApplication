@@ -21,7 +21,7 @@ import {
 import InputField from "@/components/InputField";
 import { RegisterRequest } from "@/types/register-request";
 import axios from "axios";
-import { API_ENDPOINTS } from "@/service/config";
+import { API_ENDPOINTS } from "@/service/apiService";
 
 type Props = {};
 
