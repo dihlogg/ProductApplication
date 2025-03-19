@@ -9,20 +9,20 @@ import {
   TouchableOpacity,
   TouchableWithoutFeedback,
   View,
+  TextInput,
 } from "react-native";
 import React, { useEffect, useState } from "react";
 import { Link, router, Stack } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { Colors } from "@/constants/Colors";
-import {
-  TextInput,
-  GestureHandlerRootView,
-} from "react-native-gesture-handler";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 import SocialLoginButtons from "@/components/SocialLoginButtons";
 import InputField from "@/components/InputField";
 import { LoginRequest } from "@/types/login-request";
 import axios from "axios";
 import { RegisterRequest } from "@/types/register-request";
+import { API_ENDPOINTS } from "@/service/config";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 type Props = {};
 
@@ -41,18 +41,19 @@ const SignInScreen = (props: Props) => {
     try {
       const loginData: LoginRequest = { userName, passWord };
 
-      const response = await axios.post<RegisterRequest>(
-        "http://192.168.1.142:5117/UserInfo/LoginUser",
-        loginData
-      );
+      const response = await axios.post(API_ENDPOINTS.LOGIN_USER, loginData);
 
       if (response.status === 200 && response.data?.id) {
         const userId = response.data.id;
-        console.log("User ID from API:", userId);
+        const user = response.data;
+
+        // save user_info
+        await AsyncStorage.setItem("userInfo", JSON.stringify(user));
+        console.log("User info saved:", user);
 
         Alert.alert("Success", "Login successful!");
         router.dismissAll();
-        router.push({ pathname: "/(tabs)/profile", params: { id: userId } });
+        router.push({ pathname: "/(tabs)", params: { id: user.id } });
       } else {
         Alert.alert("Error", "Invalid credentials");
       }
@@ -65,12 +66,18 @@ const SignInScreen = (props: Props) => {
   };
 
   return (
-    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+    <TouchableWithoutFeedback
+      onPress={Platform.OS === "web" ? undefined : Keyboard.dismiss}
+      accessible={false}
+    >
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={{ flex: 1 }}
       >
-        <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
+        <ScrollView
+          contentContainerStyle={{ flexGrow: 1 }}
+          keyboardShouldPersistTaps="handled"
+        >
           <View style={styles.container}>
             <Text style={styles.title}>Login to Your Account</Text>
 

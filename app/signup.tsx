@@ -21,6 +21,7 @@ import {
 import InputField from "@/components/InputField";
 import { RegisterRequest } from "@/types/register-request";
 import axios from "axios";
+import { API_ENDPOINTS } from "@/service/config";
 
 type Props = {};
 
@@ -55,12 +56,10 @@ const SignUpScreen = () => {
       };
 
       const response = await axios.post(
-        "http://192.168.1.142:5117/UserInfo/PostUserInfo",
+        API_ENDPOINTS.REGISTER_USER,
         registerData,
         {
-          headers: {
-            "Content-Type": "application/json",
-          },
+          headers: { "Content-Type": "application/json" },
         }
       );
 
@@ -86,7 +85,10 @@ const SignUpScreen = () => {
   };
 
   return (
-    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+    <TouchableWithoutFeedback
+      onPress={Platform.OS === "web" ? undefined : Keyboard.dismiss}
+      accessible={false}
+    >
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={{ flex: 1 }}

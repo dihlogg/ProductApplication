@@ -7,6 +7,7 @@ import { Stack } from "expo-router";
 import { useHeaderHeight } from "@react-navigation/elements";
 import { Colors } from "@/constants/Colors";
 import Animated, { FadeInDown } from "react-native-reanimated";
+import { API_ENDPOINTS } from "@/service/config";
 
 type Props = {};
 
@@ -19,10 +20,7 @@ const ExploreScreen = (props: Props) => {
   }, []);
 
   const getCategories = async () => {
-    const URL = "http://192.168.1.142:5117/Category/GetCategories";
-    const response = await axios.get(URL);
-
-    // console.log(response.data);
+    const response = await axios.get(API_ENDPOINTS.GET_CATEGORIES);
     setCategories(response.data);
   };
 

@@ -12,10 +12,9 @@ import { ProductType } from "@/types/type";
 import ProductItem from "./ProductItem";
 
 type Props = {
-  products: ProductType[];
 };
 
-const FlashSale = ({ products }: Props) => {
+const FlashSale = (props: Props) => {
   const saleEndDate = new Date();
   saleEndDate.setFullYear(2025, 3, 2);
   saleEndDate.setHours(23, 59, 59);
@@ -79,8 +78,7 @@ const FlashSale = ({ products }: Props) => {
           <Text style={styles.titleBtn}>See All</Text>
         </TouchableOpacity>
       </View>
-      <FlatList
-        data={products}
+      {/* <FlatList
         horizontal
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={{marginLeft: 20, paddingRight: 10}}
@@ -90,7 +88,7 @@ const FlashSale = ({ products }: Props) => {
           <ProductItem index={index} item={item} productType="sale" />
           </View>
         )}
-      />
+      /> */}
     </View>
   );
 };
