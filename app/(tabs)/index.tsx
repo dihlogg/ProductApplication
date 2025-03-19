@@ -17,6 +17,7 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import ProductList from "@/components/ProductList";
 import Categories from "@/components/Categories";
 import FlashSale from "@/components/FlashSale";
+import { API_ENDPOINTS } from "@/service/config";
 
 type Props = {};
 
@@ -32,30 +33,16 @@ const HomeScreen = (props: Props) => {
   }, []);
 
   const getProducts = async () => {
-    const URL = "http://192.168.1.142:5117/ProductInfo/GetProductInfos";
-    const response = await axios.get(URL);
-
-    // console.log(response.data);
+    const response = await axios.get(API_ENDPOINTS.GET_PRODUCT_INFO);
     setProducts(response.data);
     setIsLoading(false);
   };
 
   const getCategories = async () => {
-    const URL = "http://192.168.1.142:5117/Category/GetCategories";
-    const response = await axios.get(URL);
-
+    const response = await axios.get(API_ENDPOINTS.GET_CATEGORIES);
     setCategories(response.data);
     setIsLoading(false);
   };
-
-  // const getSaleProducts = async () => {
-  //   const URL = "http://10.60.200.155:8000/saleProducts";
-  //   const response = await axios.get(URL);
-
-  //   // console.log(response.data);
-  //   setSaleProducts(response.data);
-  //   setIsLoading(false);
-  // };
 
   if (isLoading) {
     return (
@@ -75,7 +62,7 @@ const HomeScreen = (props: Props) => {
       />
       <ScrollView>
       <Categories categories={categories} />
-      <FlashSale products={saleProducts} />
+      <FlashSale/>
       <View style={{ marginHorizontal: 20, marginBottom: 10 }}>
         <Image
           source={require("@/assets/images/702-LycNL.webp")}

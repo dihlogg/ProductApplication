@@ -7,26 +7,25 @@ import { Colors } from "@/constants/Colors";
 import { Ionicons } from "@expo/vector-icons";
 import { RegisterRequest } from "@/types/register-request";
 import axios from "axios";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 type Props = {};
 
 const ProfileScreen = (props: Props) => {
-  const { id } = useLocalSearchParams();
   const [userInfo, setUserInfo] = useState<RegisterRequest>();
+  const headerHeight = useHeaderHeight();
 
   useEffect(() => {
-    if (id) {
-      getUserDetails(id);
-    }
-  }, [id]);
+    const fetchUserInfo = async () => {
+      const userData = await AsyncStorage.getItem("userInfo");
+      if (userData) {
+        setUserInfo(JSON.parse(userData));
+      }
+    };
 
-  const getUserDetails = async (id: string | string[]) => {
-    const URL = `http://192.168.1.142:5117/UserInfo/GetUserInfoByIdAsync/${id}`;
-    const response = await axios.get(URL);
+    fetchUserInfo();
+  }, []);
 
-    setUserInfo(response.data);
-  };
-  const headerHeight = useHeaderHeight();
   return (
     <GestureHandlerRootView>
       <Stack.Screen options={{ headerShown: true, headerTransparent: true }} />

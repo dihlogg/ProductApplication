@@ -15,11 +15,13 @@ import { useHeaderHeight } from "@react-navigation/elements";
 import { Colors } from "@/constants/Colors";
 import { Ionicons } from "@expo/vector-icons";
 import Animated, { FadeInDown } from "react-native-reanimated";
+import { CartDetailInfo, CartInfo } from "@/types/cart-details";
+import { API_ENDPOINTS } from "@/service/config";
 
 type Props = {};
 
 const CartScreen = (props: Props) => {
-  const [cartItems, setCardItems] = useState<CartItemType[]>([]);
+  const [cartInfos, setCardInfos] = useState<CartDetailInfo[]>([]);
   const headerHeight = useHeaderHeight();
 
   useEffect(() => {
@@ -27,18 +29,16 @@ const CartScreen = (props: Props) => {
   }, []);
 
   const getCartData = async () => {
-    const URL = "http://192.168.1.142:5117/CartInfo/GetCartInfos";
-    const response = await axios.get(URL);
-
-    setCardItems(response.data);
-  };
+    const response = await axios.get(API_ENDPOINTS.GET_CART_INFO);
+    setCardInfos(response.data);
+};
   return (
     <GestureHandlerRootView>
       <Stack.Screen options={{ headerShown: true, headerTransparent: true }} />
       <View style={[styles.container, { marginTop: headerHeight }]}>
         <FlatList
-          data={cartItems}
-          keyExtractor={(item) => item.id.toString()}
+          data={cartInfos}
+          keyExtractor={(item, index) => index.toString()}
           renderItem={({ item, index }) => (
             <Animated.View
               entering={FadeInDown.delay(300 + index * 100).duration(500)}
@@ -60,13 +60,14 @@ const CartScreen = (props: Props) => {
   );
 };
 
-const CartItem = ({ item }: { item: CartItemType }) => {
+const CartItem = ({ item }: { item: CartDetailInfo }) => {
   return (
     <View style={styles.itemWrapper}>
-      <Image source={{ uri: item.image }} style={styles.itemImg} />
+      <Image source={{ uri: `data:image/png;base64,${item.image}` }} style={styles.itemImg} />
       <View style={styles.itemInfoWrapper}>
-        <Text style={styles.itemText}>{item.title}</Text>
+        <Text style={styles.itemText}>{item.productName}</Text>
         <Text style={styles.itemText}>${item.price}</Text>
+        <Text style={styles.itemText}>${item.quantity}</Text>
         <View style={styles.itemControlWrapper}>
           <TouchableOpacity>
             <Ionicons name="trash-outline" size={20} color={"red"} />

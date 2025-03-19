@@ -15,6 +15,7 @@ import { Colors } from "@/constants/Colors";
 import { useHeaderHeight } from "@react-navigation/elements";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import Animated, { FadeInDown, SlideInDown } from "react-native-reanimated";
+import { API_ENDPOINTS } from "@/service/config";
 
 type Props = {};
 
@@ -27,12 +28,7 @@ const ProductDetails = (props: Props) => {
   }, []);
 
   const getProductDetails = async () => {
-    const URL = `http://192.168.1.142:5117/ProductInfo/GetProductDetailsById/${id}`;
-      // productType === "sale"
-      //   ? `http://192.168.1.88:8000/saleProducts/${id}`
-      //   : `http://192.168.1.88:5117/ProductInfo/GetProductInfos/${id}`;
-    const response = await axios.get(URL);
-
+    const response = await axios.get(`${API_ENDPOINTS.GET_PRODUCT_DETAILS}/${id}`);
     setProduct(response.data);
   };
   const headerHeight = useHeaderHeight();
@@ -114,7 +110,7 @@ const ProductDetails = (props: Props) => {
                 style={styles.productVariationWrapper}
                 entering={FadeInDown.delay(1300).duration(500)}
               >
-                <View style={styles.productVariationType}>
+                {/* <View style={styles.productVariationType}>
                   <Text style={styles.productVariationTitle}>Color</Text>
                   <View style={styles.productVariationValueWrapper}>
                     <View
@@ -188,7 +184,7 @@ const ProductDetails = (props: Props) => {
                       </Text>
                     </View>
                   </View>
-                </View>
+                </View> */}
               </Animated.View>
             </View>
           )}
