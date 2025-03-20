@@ -29,8 +29,14 @@ export const addToCart = async (productId: string, setCartProducts?: Function) =
         if (updatedCartResponse.status === 200) {
           const cartItems = updatedCartResponse.data;
           const productDetailsPromises = cartItems.map(async (item: any) => {
-            const productResponse = await axios.get(`${API_ENDPOINTS.GET_PRODUCT_DETAILS}/${item.ProductId}`);
-            return { ...productResponse.data, quantity: item.Quantity };
+            const productResponse = await axios.get(
+              `${API_ENDPOINTS.GET_PRODUCT_DETAILS}/${item.ProductId}`
+            );
+            return { 
+              ...productResponse.data, 
+              quantity: productResponse.data.quantity, // số lượng tồn kho
+              cartQuantity: item.Quantity // số lượng đã chọn trong giỏ hàng
+            };
           });
 
           const updatedCartProducts = await Promise.all(productDetailsPromises);

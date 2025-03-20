@@ -25,7 +25,7 @@ type Props = {};
 const CartScreen = (props: Props) => {
   const [cartProducts, setCartProducts] = useState<CartProductType[]>([]);
   const totalPrice = cartProducts.reduce(
-    (total, item) => total + item.price * item.quantity,
+    (total, item) => total + item.price * item.cartQuantity,
     0
   );
   const headerHeight = useHeaderHeight();
@@ -42,30 +42,33 @@ const CartScreen = (props: Props) => {
 
   const getCartData = async () => {
     try {
-      // get user_info from async store
       const userData = await AsyncStorage.getItem("userInfo");
       if (!userData) return;
-
+  
       const user = JSON.parse(userData);
       const userId: string = user.id;
-
+  
       const cartResponse = await axios.get(
         API_ENDPOINTS.GET_CART_REDIS(userId)
       );
       if (cartResponse.status !== 200) return;
-
+  
       const cartItems = cartResponse.data;
       console.log("Cart Items:", cartItems);
-
+  
       const productDetailsPromises = cartItems.map(async (item: any) => {
         const productResponse = await axios.get(
           `${API_ENDPOINTS.GET_PRODUCT_DETAILS}/${item.ProductId}`
         );
-        return { ...productResponse.data, quantity: item.Quantity };
+        return { 
+          ...productResponse.data,
+          quantity: productResponse.data.quantity, // số lượng tồn kho
+          cartQuantity: item.Quantity // số lượng trong giỏ hàng
+        };
       });
-
+  
       const productsWithDetails = await Promise.all(productDetailsPromises);
-      setCartProducts(productsWithDetails); // state products
+      setCartProducts(productsWithDetails);
     } catch (error) {
       console.error("Error fetching cart data:", error);
     }
@@ -73,24 +76,24 @@ const CartScreen = (props: Props) => {
 
   const updateQuantity = async (productId: string, newQuantity: number) => {
     if (newQuantity < 1) return;
-
+  
     try {
       const userData = await AsyncStorage.getItem("userInfo");
       if (!userData) return;
-
+  
       const user = JSON.parse(userData);
       const userId: string = user.id;
-
+  
       const response = await axios.post(API_ENDPOINTS.POST_CART_REDIS, {
         userId,
         productId,
         quantity: newQuantity,
       });
-
+  
       if (response.status === 200) {
         setCartProducts((prevProducts) =>
           prevProducts.map((item) =>
-            item.id === productId ? { ...item, quantity: newQuantity } : item
+            item.id === productId ? { ...item, cartQuantity: newQuantity } : item
           )
         );
       }
@@ -186,6 +189,8 @@ const CartItem = ({
     item?.productImages?.[0]?.imageUrl ||
     "https://cdnv2.tgdd.vn/mwg-static/tgdd/Banner/b1/ff/b1ff8943a6d5c41189d9a59591fd68b2.png";
 
+  const isMaxQuantity = (item.cartQuantity || 0) >= (item.quantity || 0);
+
   return (
     <View style={styles.itemWrapper}>
       <Image
@@ -195,9 +200,9 @@ const CartItem = ({
       />
       <View style={styles.itemInfoWrapper}>
         <Text style={styles.itemText}>{item.name}</Text>
-        <Text style={styles.itemText}>Số lượng: {item.quantity}</Text>
+        <Text style={styles.itemText}>Only {item.quantity} left</Text>
         <Text style={styles.itemText}>
-          {(item.price * item.quantity).toLocaleString("vi-VN")}
+          {(item.price * (item.cartQuantity || 0)).toLocaleString("vi-VN")}
           <Text style={styles.textVND}> ₫</Text>
         </Text>
 
@@ -205,29 +210,44 @@ const CartItem = ({
           <TouchableOpacity onPress={() => item.id && removeFromCart(item.id)}>
             <Ionicons name="trash-outline" size={20} color={"red"} />
           </TouchableOpacity>
-          <View style={styles.quantityControlWrapper}>
-            <TouchableOpacity
-              style={styles.quantityControl}
-              onPress={() =>
-                item.id && updateQuantity(item.id, item.quantity - 1)
-              }
-            >
-              <Ionicons name="remove-outline" size={20} color={Colors.black} />
-            </TouchableOpacity>
-            <Text>{item.quantity}</Text>
-            <TouchableOpacity
-              style={styles.quantityControl}
-              onPress={() =>
-                item.id && updateQuantity(item.id, item.quantity + 1)
-              }
-            >
-              <Ionicons name="add-outline" size={20} color={Colors.black} />
-            </TouchableOpacity>
+          <View>
+            <View style={styles.quantityControlWrapper}>
+              <TouchableOpacity
+                style={styles.quantityControl}
+                onPress={() =>
+                  item.id && updateQuantity(item.id, (item.cartQuantity || 0) - 1)
+                }
+              >
+                <Ionicons name="remove-outline" size={20} color={Colors.black} />
+              </TouchableOpacity>
+              <Text>{item.cartQuantity || 0}</Text>
+              <TouchableOpacity
+                style={[
+                  styles.quantityControl,
+                  isMaxQuantity && styles.quantityControlDisabled
+                ]}
+                disabled={isMaxQuantity}
+                onPress={() =>
+                  item.id && updateQuantity(item.id, (item.cartQuantity || 0) + 1)
+                }
+              >
+                <Ionicons 
+                  name="add-outline" 
+                  size={20} 
+                  color={isMaxQuantity ? Colors.gray : Colors.black} 
+                />
+              </TouchableOpacity>
+            </View>
           </View>
           <TouchableOpacity>
             <Ionicons name="heart-outline" size={20} color={"red"} />
           </TouchableOpacity>
         </View>
+        {isMaxQuantity && (
+              <Text style={styles.maxQuantityText}>
+                Max {item.quantity} per order
+              </Text>
+            )}
       </View>
     </View>
   );
@@ -313,5 +333,14 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: Colors.lightGray,
     borderRadius: 5,
+  },
+  quantityControlDisabled: {
+    opacity: 0.5,
+  },
+  maxQuantityText: {
+    fontSize: 14,
+    fontWeight: 500,
+    color: 'red',
+    textAlign: 'center',
   },
 });
