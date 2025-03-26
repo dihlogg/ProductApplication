@@ -19,10 +19,13 @@ import Animated, { FadeInDown } from "react-native-reanimated";
 import { API_ENDPOINTS } from "@/service/apiService";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useFocusEffect } from "@react-navigation/native";
+import connectSignalR from "@/service/signalrService";
+import { RegisterRequest } from "@/types/register-request";
 
 type Props = {};
 
 const CartScreen = (props: Props) => {
+  const [userInfo, setUserInfo] = useState<RegisterRequest>();
   const [cartProducts, setCartProducts] = useState<CartProductType[]>([]);
   const totalPrice = cartProducts.reduce(
     (total, item) => total + item.price * item.cartQuantity,
@@ -31,9 +34,27 @@ const CartScreen = (props: Props) => {
   const headerHeight = useHeaderHeight();
 
   useEffect(() => {
-    getCartData();
+    const fetchUserInfoAndConnect = async () => {
+      const userData = await AsyncStorage.getItem("userInfo");
+      if (!userData) return;
+  
+      const user = JSON.parse(userData);
+      setUserInfo(user);
+  
+      if (!user.id) return; // expect signalR chỉ khi có userId
+  
+      console.log(`Connecting SignalR for user: ${user.id}`);
+      const connection = await connectSignalR(user.id, getCartData);
+  
+      return () => {
+        console.log("Stopping SignalR connection");
+        connection?.stop();
+      };
+    };
+  
+    fetchUserInfoAndConnect();
   }, []);
-
+  
   useFocusEffect(
     useCallback(() => {
       getCartData();
@@ -44,29 +65,29 @@ const CartScreen = (props: Props) => {
     try {
       const userData = await AsyncStorage.getItem("userInfo");
       if (!userData) return;
-  
+
       const user = JSON.parse(userData);
       const userId: string = user.id;
-  
+
       const cartResponse = await axios.get(
         API_ENDPOINTS.GET_CART_REDIS(userId)
       );
       if (cartResponse.status !== 200) return;
-  
+
       const cartItems = cartResponse.data;
       console.log("Cart Items:", cartItems);
-  
+
       const productDetailsPromises = cartItems.map(async (item: any) => {
         const productResponse = await axios.get(
           `${API_ENDPOINTS.GET_PRODUCT_DETAILS}/${item.ProductId}`
         );
-        return { 
+        return {
           ...productResponse.data,
           quantity: productResponse.data.quantity, // số lượng tồn kho
-          cartQuantity: item.Quantity // số lượng trong giỏ hàng
+          cartQuantity: item.Quantity, // số lượng trong giỏ hàng
         };
       });
-  
+
       const productsWithDetails = await Promise.all(productDetailsPromises);
       setCartProducts(productsWithDetails);
     } catch (error) {
@@ -76,31 +97,41 @@ const CartScreen = (props: Props) => {
 
   const updateQuantity = async (productId: string, newQuantity: number) => {
     if (newQuantity < 1) return;
-  
+
     try {
       const userData = await AsyncStorage.getItem("userInfo");
       if (!userData) return;
-  
+
       const user = JSON.parse(userData);
       const userId: string = user.id;
-  
+
+      console.log(
+        `Sending update: User ${userId}, Product ${productId}, New Quantity ${newQuantity}`
+      );
+
       const response = await axios.post(API_ENDPOINTS.POST_CART_REDIS, {
         userId,
         productId,
         quantity: newQuantity,
       });
-  
+
       if (response.status === 200) {
+        console.log("Update success");
+
         setCartProducts((prevProducts) =>
           prevProducts.map((item) =>
-            item.id === productId ? { ...item, cartQuantity: newQuantity } : item
+            item.id === productId
+              ? { ...item, cartQuantity: newQuantity }
+              : item
           )
         );
       }
     } catch (error) {
+      console.error("Error updating quantity:", error);
       Alert.alert("Error", "Failed to update quantity.");
     }
   };
+
   const removeFromCart = (productId: string) => {
     Alert.alert(
       "Confirm",
@@ -215,26 +246,32 @@ const CartItem = ({
               <TouchableOpacity
                 style={styles.quantityControl}
                 onPress={() =>
-                  item.id && updateQuantity(item.id, (item.cartQuantity || 0) - 1)
+                  item.id &&
+                  updateQuantity(item.id, (item.cartQuantity || 0) - 1)
                 }
               >
-                <Ionicons name="remove-outline" size={20} color={Colors.black} />
+                <Ionicons
+                  name="remove-outline"
+                  size={20}
+                  color={Colors.black}
+                />
               </TouchableOpacity>
               <Text>{item.cartQuantity || 0}</Text>
               <TouchableOpacity
                 style={[
                   styles.quantityControl,
-                  isMaxQuantity && styles.quantityControlDisabled
+                  isMaxQuantity && styles.quantityControlDisabled,
                 ]}
                 disabled={isMaxQuantity}
                 onPress={() =>
-                  item.id && updateQuantity(item.id, (item.cartQuantity || 0) + 1)
+                  item.id &&
+                  updateQuantity(item.id, (item.cartQuantity || 0) + 1)
                 }
               >
-                <Ionicons 
-                  name="add-outline" 
-                  size={20} 
-                  color={isMaxQuantity ? Colors.gray : Colors.black} 
+                <Ionicons
+                  name="add-outline"
+                  size={20}
+                  color={isMaxQuantity ? Colors.gray : Colors.black}
                 />
               </TouchableOpacity>
             </View>
@@ -244,10 +281,10 @@ const CartItem = ({
           </TouchableOpacity>
         </View>
         {isMaxQuantity && (
-              <Text style={styles.maxQuantityText}>
-                Max {item.quantity} per order
-              </Text>
-            )}
+          <Text style={styles.maxQuantityText}>
+            Max {item.quantity} per order
+          </Text>
+        )}
       </View>
     </View>
   );
@@ -340,7 +377,7 @@ const styles = StyleSheet.create({
   maxQuantityText: {
     fontSize: 14,
     fontWeight: 500,
-    color: 'red',
-    textAlign: 'center',
+    color: "red",
+    textAlign: "center",
   },
 });

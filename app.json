@@ -25,7 +25,11 @@
     "web": {
       "bundler": "metro",
       "output": "static",
-      "favicon": "./assets/images/favicon.png"
+      "favicon": "./assets/images/favicon.png",
+      "experimentalPolyfill": true,
+      "html": {
+        "head": "<script src=\"https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.5/signalr.min.js\"></script>"
+      }
     },
     "plugins": [
       "expo-router",
