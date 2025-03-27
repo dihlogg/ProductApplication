@@ -15,10 +15,21 @@ export const addToCart = async (productId: string, setCartProducts?: Function) =
     const user = JSON.parse(userData);
     const userId = user.id;
 
+    // get cart redis
+    const cartResponse = await axios.get(API_ENDPOINTS.GET_CART_REDIS(userId));
+    let cartItems = cartResponse.status === 200 ? cartResponse.data : [];
+
+    // check product in cart?
+    const existingProduct = cartItems.find((item: any) => item.ProductId === productId);
+
+    // if product exist in cart, +1 cartQuantity
+    const newQuantity = existingProduct ? existingProduct.Quantity + 1 : 1;
+
+    // if product doesn't exist in cart, add new product to cart
     const response = await axios.post(API_ENDPOINTS.POST_CART_REDIS, {
       productId,
       userId,
-      quantity: 1,
+      quantity: newQuantity,
     });
 
     if (response.status === 200) {
@@ -51,5 +62,6 @@ export const addToCart = async (productId: string, setCartProducts?: Function) =
   }
   return false;
 };
+
 
 
