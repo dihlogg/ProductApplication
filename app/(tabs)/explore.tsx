@@ -1,17 +1,26 @@
-import { FlatList, Image, StyleSheet, Text, View } from "react-native";
+import {
+  FlatList,
+  Image,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import { CategoryType } from "@/types/type";
+import { CategoryType, ProductType } from "@/types/type";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
-import { Stack } from "expo-router";
+import { Link, router, Stack } from "expo-router";
 import { useHeaderHeight } from "@react-navigation/elements";
 import { Colors } from "@/constants/Colors";
 import Animated, { FadeInDown } from "react-native-reanimated";
 import { API_ENDPOINTS } from "@/service/apiService";
 
-type Props = {};
+type Props = {
+  item: ProductType;
+};
 
-const ExploreScreen = (props: Props) => {
+const ExploreScreen = ({ item }: Props) => {
   const [categories, setCategories] = useState<CategoryType[]>([]);
   const headerHeight = useHeaderHeight();
 
@@ -31,18 +40,18 @@ const ExploreScreen = (props: Props) => {
         <FlatList
           data={categories}
           keyExtractor={(item) => item.id ?? Math.random().toString()}
-          showsVerticalScrollIndicator={false}
           renderItem={({ item, index }) => (
-            <Animated.View
-              style={styles.itemWrapper}
-              entering={FadeInDown.delay(300 + index * 100).duration(500)}
+            <TouchableOpacity
+              onPress={() => router.push(`/product-by-categories/${item.id}`)}
             >
-              <Text style={styles.itemTitle}>{item.categoryName}</Text>
-              <Image
-                source={{ uri: `data:image/png;base64,${item.image}` }}
-                style={{ width: 100, height: 100, borderRadius: 10 }}
-              />
-            </Animated.View>
+              <Animated.View style={styles.itemWrapper}>
+                <Text style={styles.itemTitle}>{item.categoryName}</Text>
+                <Image
+                  source={{ uri: `data:image/png;base64,${item.image}` }}
+                  style={{ width: 100, height: 100 }}
+                />
+              </Animated.View>
+            </TouchableOpacity>
           )}
         />
       </View>

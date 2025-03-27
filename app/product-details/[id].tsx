@@ -18,17 +18,24 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import Animated, { FadeInDown, SlideInDown } from "react-native-reanimated";
 import { API_ENDPOINTS } from "@/service/apiService";
 import { addToCart } from "@/service/cartService";
+import { useNavigation } from "@react-navigation/native";
+
 
 type Props = {};
 
 const ProductDetails = (props: Props) => {
   const headerHeight = useHeaderHeight();
-  const { id, productType } = useLocalSearchParams();
+  const { id } = useLocalSearchParams();
   const [product, setProduct] = useState<ProductType>();
-
+  const navigation = useNavigation();
   useEffect(() => {
     getProductDetails();
   }, []);
+  useEffect(() => {
+    if (product?.name) {
+      navigation.setOptions({ title: product.name });
+    }
+  }, [product]);
 
   const getProductDetails = async () => {
     const response = await axios.get(`${API_ENDPOINTS.GET_PRODUCT_DETAILS}/${id}`);
@@ -48,13 +55,12 @@ const ProductDetails = (props: Props) => {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <Stack.Screen
         options={{
-          title: "Product Details",
           headerTransparent: true,
-          headerLeft: () => (
-            <TouchableOpacity onPress={() => router.back()}>
-              <Ionicons name="arrow-back" size={24} color={Colors.black} />
-            </TouchableOpacity>
-          ),
+          // headerLeft: () => (
+          //   <TouchableOpacity onPress={() => router.back()}>
+          //     <Ionicons name="arrow-back" size={24} color={Colors.black} />
+          //   </TouchableOpacity>
+          // ),
           headerRight: () => (
             <TouchableOpacity>
               <Ionicons name="cart-outline" size={24} color={Colors.black} />

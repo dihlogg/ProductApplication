@@ -1,6 +1,6 @@
 import { HubConnectionBuilder } from "@microsoft/signalr";
 
-const API_URL = "http://10.60.30.130:5117";
+const API_URL = "http://192.168.1.43:5117";
 
 const connectSignalR = async (
   userId: string | null | undefined,
@@ -13,14 +13,14 @@ const connectSignalR = async (
 
   try {
     await connection.start();
-    console.log("✅ Connected to SignalR");
+    console.log("Connected to SignalR");
 
-    // join group dựa vào userId
+    // join hubs group based userId
     await connection.invoke("JoinCartGroup", userId);
     console.log(`Joined group based: ${userId}`);
 
     connection.on("ReceiveCartUpdate", async (action, cartItem) => {
-      console.log(`🔄 Cart update received: ${action}`, cartItem);
+      console.log(`Cart update received: ${action}`, cartItem);
       await getCartData();
     });
 
