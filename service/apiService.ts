@@ -1,4 +1,4 @@
-const API_BASE_URL = "http://192.168.1.125:5117";
+const API_BASE_URL = "http://192.168.1.132:5117";
 
 export const API_ENDPOINTS = {
     GET_CART_INFO: `${API_BASE_URL}/CartInfo/GetCartInfos`,
@@ -11,4 +11,5 @@ export const API_ENDPOINTS = {
     POST_CART_REDIS: `${API_BASE_URL}/CartDetails/Redis/PostCartRedis`,
     GET_CART_REDIS: (userId: any) => `${API_BASE_URL}/CartDetails/Redis/GetCartItems/${userId}`,
     DELETE_PRODUCT_FROM_CART_REDIS: (userId: any, productId: any) => `${API_BASE_URL}/CartDetails/Redis/DeleteProductFromCartRedis/user/${userId}/product/${productId}`,
+    POST_CART_DETAIL_REDIS: `${API_BASE_URL}/CartDetails/Redis/PostCartDetailsRedis`,
 };
