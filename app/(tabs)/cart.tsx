@@ -2,6 +2,7 @@ import {
   Alert,
   FlatList,
   Image,
+  Modal,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -10,7 +11,7 @@ import {
 import React, { useCallback, useEffect, useState } from "react";
 import axios from "axios";
 import { CartProductType } from "@/types/type";
-import { Stack } from "expo-router";
+import { router, Stack } from "expo-router";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { useHeaderHeight } from "@react-navigation/elements";
 import { Colors } from "@/constants/Colors";
@@ -32,29 +33,30 @@ const CartScreen = (props: Props) => {
     0
   );
   const headerHeight = useHeaderHeight();
+  const [isSuccessModalVisible, setIsSuccessModalVisible] = useState(false);
 
   useEffect(() => {
     const fetchUserInfoAndConnect = async () => {
       const userData = await AsyncStorage.getItem("userInfo");
       if (!userData) return;
-  
+
       const user = JSON.parse(userData);
       setUserInfo(user);
-  
+
       if (!user.id) return; // expect signalR chỉ khi có userId
-  
+
       console.log(`Connecting SignalR for user: ${user.id}`);
       const connection = await connectSignalR(user.id, getCartData);
-  
+
       return () => {
         console.log("Stopping SignalR connection");
         connection?.stop();
       };
     };
-  
+
     fetchUserInfoAndConnect();
   }, []);
-  
+
   useFocusEffect(
     useCallback(() => {
       getCartData();
@@ -172,6 +174,55 @@ const CartScreen = (props: Props) => {
     );
   };
 
+  const handleCheckout = async () => {
+    try {
+      const userData = await AsyncStorage.getItem("userInfo");
+      if (!userData) {
+        Alert.alert("Error", "User not found.");
+        return;
+      }
+
+      const user = JSON.parse(userData);
+      const userId: string = user.id;
+
+      if (!userId || cartProducts.length === 0) {
+        Alert.alert("Error", "No products in cart.");
+        return;
+      }
+
+      const productsPayload = cartProducts.map((item) => ({
+        productId: item.id,
+        quantity: item.cartQuantity,
+      }));
+
+      // show popup
+      setIsSuccessModalVisible(true);
+
+      const response = await axios.post(API_ENDPOINTS.POST_CART_DETAIL_REDIS, {
+        userId,
+        products: productsPayload,
+      });
+
+      if (response.status === 200) {
+        console.log("Checkout response:", response.data);
+        // clear cart redis
+        setCartProducts([]);
+      } else {
+        Alert.alert("Error", "Checkout failed.");
+        setIsSuccessModalVisible(false);
+      }
+    } catch (error) {
+      console.error("Checkout error:", error);
+      Alert.alert("Error", "An error occurred during checkout.");
+      setIsSuccessModalVisible(false);
+    }
+  };
+
+  const handleContinueShopping = () => {
+    setIsSuccessModalVisible(false);
+    router.push("/");
+  };
+
   return (
     <GestureHandlerRootView>
       <Stack.Screen options={{ headerShown: true, headerTransparent: true }} />
@@ -199,9 +250,37 @@ const CartScreen = (props: Props) => {
             <Text style={styles.textVND}> ₫</Text>
           </Text>
         </View>
-        <TouchableOpacity style={styles.checkoutBtn}>
+        <TouchableOpacity style={styles.checkoutBtn} onPress={handleCheckout}>
           <Text style={styles.checkoutBtnText}>Checkout</Text>
         </TouchableOpacity>
+        <Modal
+          animationType="fade"
+          transparent={true}
+          visible={isSuccessModalVisible}
+          onRequestClose={() => setIsSuccessModalVisible(false)}
+        >
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalContent}>
+              <Image
+                source={{
+                  uri: "https://cdn-icons-png.flaticon.com/512/845/845646.png", // Icon checkmark
+                }}
+                style={styles.successIcon}
+              />
+              <Text style={styles.successTitle}>Success!</Text>
+              <Text style={styles.successMessage}>
+                Your order will be delivered soon.{"\n"}Thank you for choosing
+                our app!
+              </Text>
+              <TouchableOpacity
+                style={styles.continueBtn}
+                onPress={handleContinueShopping}
+              >
+                <Text style={styles.continueBtnText}>CONTINUE SHOPPING</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
       </View>
     </GestureHandlerRootView>
   );
@@ -379,5 +458,43 @@ const styles = StyleSheet.create({
     fontWeight: 500,
     color: "red",
     textAlign: "center",
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  modalContent: {
+    width: 300,
+    backgroundColor: "white",
+    borderRadius: 15,
+    padding: 20,
+    alignItems: "center",
+  },
+  successIcon: {
+    width: 80,
+    height: 80,
+    marginBottom: 10,
+  },
+  successTitle: {
+    fontSize: 22,
+    fontWeight: "bold",
+    marginBottom: 10,
+  },
+  successMessage: {
+    fontSize: 16,
+    textAlign: "center",
+    marginBottom: 20,
+  },
+  continueBtn: {
+    backgroundColor: "red",
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 10,
+  },
+  continueBtnText: {
+    color: "white",
+    fontSize: 16,
   },
 });
