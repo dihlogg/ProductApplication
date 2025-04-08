@@ -16,14 +16,14 @@ import Header from "@/components/Header";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import ProductList from "@/components/ProductList";
 import Categories from "@/components/Categories";
-import FlashSale from "@/components/FlashSale";
 import { API_ENDPOINTS } from "@/service/apiService";
+import Features from "@/components/Features";
 
 type Props = {};
 
 const HomeScreen = (props: Props) => {
   const [products, setProducts] = useState<ProductType[]>([]);
-  const [saleProducts, setSaleProducts] = useState<ProductType[]>([]);
+  const [featuredProducts, setFeaturedProducts] = useState<ProductType[]>([]);
   const [categories, setCategories] = useState<CategoryType[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
@@ -62,7 +62,7 @@ const HomeScreen = (props: Props) => {
       />
       <ScrollView>
       <Categories categories={categories} />
-      <FlashSale/>
+      <Features/>
       <View style={{ marginHorizontal: 20, marginBottom: 10 }}>
         <Image
           source={require("@/assets/images/702-LycNL.webp")}

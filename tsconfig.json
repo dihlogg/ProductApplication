@@ -6,7 +6,10 @@
       "@/*": [
         "./*",
       ]
-    }
+    },
+    "moduleResolution": "bundler",
+    "target": "es6",
+    "module": "esnext",
   },
   "include": [
     "**/*.ts",

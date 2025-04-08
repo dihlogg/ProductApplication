@@ -6,6 +6,13 @@ export interface ProductType {
   quantity: number;
   categoryId: string;
   productImages: ProductImage[];
+  CpuType?: string;
+  RamType?: string;
+  RomType?: string;
+  ScreenSize?: string;
+  BateryCapacity?: string;
+  DetailsType?: string;
+  ConnectType?: string;
 }
 export interface CartProductType extends ProductType {
   cartQuantity: number; // Số lượng sản phẩm trong giỏ hàng
