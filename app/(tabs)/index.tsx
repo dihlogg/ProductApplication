@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   ScrollView,
+  Platform,
 } from "react-native";
 import React, { useEffect, useState } from "react";
 import axios from "axios";
@@ -19,6 +20,7 @@ import Categories from "@/components/Categories";
 import { API_ENDPOINTS } from "@/service/apiService";
 import Features from "@/components/Features";
 import ChatWootWidget from "@/components/ChatwootWebView";
+import FloatingChatButton from "@/components/FloatingChatButton";
 
 type Props = {};
 
@@ -27,6 +29,7 @@ const HomeScreen = (props: Props) => {
   const [featuredProducts, setFeaturedProducts] = useState<ProductType[]>([]);
   const [categories, setCategories] = useState<CategoryType[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [chatVisible, setChatVisible] = useState(true);
 
   useEffect(() => {
     getCategories();
@@ -52,33 +55,50 @@ const HomeScreen = (props: Props) => {
       </View>
     );
   }
+  const toggleChat = () => {
+    setChatVisible(!chatVisible);
+  };
 
   return (
-    <GestureHandlerRootView>
+    <GestureHandlerRootView style={{ flex: 1 }}>
       <Stack.Screen
         options={{
           headerShown: true,
           header: () => <Header />,
         }}
       />
-      <ScrollView>
-      <Categories categories={categories} />
-      <Features/>
-      <View style={{ marginHorizontal: 20, marginBottom: 10 }}>
-        <Image
-          source={require("@/assets/images/702-LycNL.webp")}
-          style={{ width: "100%", height: 150, borderRadius: 15 }}
-        />
+      <View style={{ flex: 1 }}>
+        <ScrollView contentContainerStyle={{ paddingBottom: 100 }}>
+          <Categories categories={categories} />
+          <Features />
+          <View style={{ marginHorizontal: 20, marginBottom: 10 }}>
+            <Image
+              source={require("@/assets/images/702-LycNL.webp")}
+              style={{ width: "100%", height: 150, borderRadius: 15 }}
+            />
+          </View>
+          <ProductList products={products} flatlist={false} />
+        </ScrollView>
+        {Platform.OS !== "web" && (
+          <>
+            <ChatWootWidget visible={chatVisible} />
+            <FloatingChatButton onPress={toggleChat} isActive={chatVisible} />
+          </>
+        )}
       </View>
-      <ProductList products={products} flatlist={false} />
-      <View style={{ height: 400 }}>
-        <ChatWootWidget />
-      </View>
-      </ScrollView>
     </GestureHandlerRootView>
   );
 };
 
 export default HomeScreen;
 
-const styles = StyleSheet.create({});
+const styles = StyleSheet.create({
+  chatWootContainer: {
+    position: "absolute",
+    right: 10,
+    bottom: 20,
+    width: 100,
+    height: 400,
+    zIndex: 100, // đảm bảo hiển thị trên ScrollView
+  },
+});
