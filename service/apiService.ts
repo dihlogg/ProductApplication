@@ -1,4 +1,4 @@
-const API_BASE_URL = "http://192.168.1.172:5117";
+const API_BASE_URL = "http://192.168.1.182:5117";
 
 export const API_ENDPOINTS = {
     GET_CART_INFO: `${API_BASE_URL}/CartInfo/GetCartInfos`,
@@ -14,4 +14,5 @@ export const API_ENDPOINTS = {
     POST_CART_DETAIL_REDIS: `${API_BASE_URL}/CartDetails/Redis/PostCartDetailsRedis`,
     GET_FEATURED_PRODUCTS_HISTORY: `${API_BASE_URL}/ProductInfoHistory/GetFeaturedProductHistory`,
     GET_SIMILAR_PRODUCTS: `${API_BASE_URL}/ProductInfo/GetSimilarProducts`,
+    POST_MESSAGE_CHATWOOT: `${API_BASE_URL}/Chat/ChatBot`,
 };

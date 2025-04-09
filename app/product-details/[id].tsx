@@ -5,6 +5,7 @@ import {
   TouchableOpacity,
   ScrollView,
   Alert,
+  FlatList,
 } from "react-native";
 import React, { useEffect, useState } from "react";
 import { router, Stack, useLocalSearchParams } from "expo-router";
@@ -19,7 +20,8 @@ import Animated, { FadeInDown, SlideInDown } from "react-native-reanimated";
 import { API_ENDPOINTS } from "@/service/apiService";
 import { addToCart } from "@/service/cartService";
 import { useNavigation } from "@react-navigation/native";
-
+import ProductItem from "@/components/ProductItem";
+import SimilarProducts from "@/components/SimilarProducts";
 
 type Props = {};
 
@@ -28,9 +30,17 @@ const ProductDetails = (props: Props) => {
   const { id } = useLocalSearchParams();
   const [product, setProduct] = useState<ProductType>();
   const navigation = useNavigation();
+  const [similarProducts, setSimilarProducts] = useState<ProductType[]>([]);
   useEffect(() => {
     getProductDetails();
   }, []);
+
+  useEffect(() => {
+    if (product?.id) {
+      getSimilarProducts(product.id);
+    }
+  }, [product]);
+
   useEffect(() => {
     if (product?.name) {
       navigation.setOptions({ title: product.name });
@@ -38,8 +48,16 @@ const ProductDetails = (props: Props) => {
   }, [product]);
 
   const getProductDetails = async () => {
-    const response = await axios.get(`${API_ENDPOINTS.GET_PRODUCT_DETAILS}/${id}`);
+    const response = await axios.get(
+      `${API_ENDPOINTS.GET_PRODUCT_DETAILS}/${id}`
+    );
     setProduct(response.data);
+  };
+  const getSimilarProducts = async (productId: string) => {
+    const response = await axios.get(
+      `${API_ENDPOINTS.GET_SIMILAR_PRODUCTS}/${productId}`
+    );
+    setSimilarProducts(response.data);
   };
   const handleAddToCart = async () => {
     if (product?.id) {
@@ -67,8 +85,9 @@ const ProductDetails = (props: Props) => {
         <View>
           {product && (
             <Animated.View entering={FadeInDown.delay(300).duration(500)}>
-              <ImageSlider imageList={product.productImages.map(img => img.imageUrl)} />
-
+              <ImageSlider
+                imageList={product.productImages.map((img) => img.imageUrl)}
+              />
             </Animated.View>
           )}
           {product && (
@@ -104,12 +123,11 @@ const ProductDetails = (props: Props) => {
                 entering={FadeInDown.delay(900).duration(500)}
               >
                 <Text style={styles.price}>
-                              {product.price.toLocaleString("vi-VN")} VNĐ
-                            </Text>
+                  {product.price.toLocaleString("vi-VN")} VNĐ
+                </Text>
                 <View style={styles.priceDiscount}>
-                  <Text style={styles.priceDiscountTxt}>6% Off</Text>
+                  <Text style={styles.priceDiscountTxt}>Featured Products</Text>
                 </View>
-                <Text style={styles.oldPrice}>${product.price + 2}</Text>
               </Animated.View>
 
               <Animated.Text
@@ -119,11 +137,35 @@ const ProductDetails = (props: Props) => {
                 {product.description}
               </Animated.Text>
 
+              <Text
+                style={{
+                  fontSize: 18,
+                  fontWeight: "bold",
+                  marginBottom: 10,
+                  marginTop: 10,
+                }}
+              >
+                🔍 Gợi ý sản phẩm tương tự
+              </Text>
+              <FlatList
+                data={similarProducts}
+                horizontal
+                keyExtractor={(item) => item.id ?? Math.random().toString()}
+                renderItem={({ item, index }) => (
+                  <View style={{ width: 220, marginRight: 10 }}>
+                    <ProductItem
+                      item={item}
+                      index={index}
+                      productType="regular"
+                    />
+                  </View>
+                )}
+              />
+              <SimilarProducts products={similarProducts} />
               <Animated.View
                 style={styles.productVariationWrapper}
                 entering={FadeInDown.delay(1300).duration(500)}
-              >
-              </Animated.View>
+              ></Animated.View>
             </View>
           )}
         </View>
