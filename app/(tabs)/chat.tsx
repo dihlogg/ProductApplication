@@ -14,10 +14,38 @@ import { useHeaderHeight } from "@react-navigation/elements";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { Stack } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
+import axios from "axios";
+
+// Định nghĩa interface cho tin nhắn
+interface Message {
+  id: number;
+  text: string;
+  sender: "user" | "bot"; // Giới hạn sender chỉ là "user" hoặc "bot"
+}
 
 const ChatScreen = () => {
   const headerHeight = useHeaderHeight();
   const [message, setMessage] = useState("");
+  const [messages, setMessages] = useState<Message[]>([]); // Khai báo kiểu cho messages
+
+  const sendMessage = async () => {
+    if (!message.trim()) return;
+
+    try {
+      const response = await axios.post(
+        "http://your-asp-net-core-server/api/chat/send",
+        {
+          conversationId: "your-conversation-id",
+          message,
+        }
+      );
+      // Thêm tin nhắn vào danh sách
+      setMessages([...messages, { id: Date.now(), text: message, sender: "user" }]);
+      setMessage("");
+    } catch (error) {
+      console.error("Error sending message:", error);
+    }
+  };
 
   return (
     <GestureHandlerRootView style={styles.root}>
@@ -25,11 +53,24 @@ const ChatScreen = () => {
       <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
         <KeyboardAvoidingView
           behavior={Platform.OS === "ios" ? "padding" : "height"}
-          keyboardVerticalOffset={headerHeight - 80} // Giảm khoảng cách khi input di chuyển lên
+          keyboardVerticalOffset={headerHeight - 80}
           style={styles.flexContainer}
         >
           <View style={[styles.container, { marginTop: headerHeight }]}>
             <Text style={styles.greeting}>Hello, Đinh Long</Text>
+            <View style={styles.messageList}>
+              {messages.map((msg) => (
+                <Text
+                  key={msg.id}
+                  style={[
+                    styles.message,
+                    msg.sender === "user" ? styles.userMessage : styles.botMessage,
+                  ]}
+                >
+                  {msg.text}
+                </Text>
+              ))}
+            </View>
           </View>
 
           <View style={styles.inputContainer}>
@@ -39,7 +80,7 @@ const ChatScreen = () => {
               value={message}
               onChangeText={(text) => setMessage(text)}
             />
-            <TouchableOpacity style={styles.sendButton}>
+            <TouchableOpacity style={styles.sendButton} onPress={sendMessage}>
               <Ionicons name="send" size={24} color="#fff" />
             </TouchableOpacity>
           </View>
@@ -62,8 +103,6 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
     paddingHorizontal: 20,
   },
   greeting: {
@@ -71,6 +110,25 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: "black",
     marginBottom: 20,
+  },
+  messageList: {
+    flex: 1,
+  },
+  message: {
+    padding: 10,
+    borderRadius: 10,
+    marginVertical: 5,
+    maxWidth: "70%",
+  },
+  userMessage: {
+    backgroundColor: "#007AFF",
+    color: "#fff",
+    alignSelf: "flex-end",
+  },
+  botMessage: {
+    backgroundColor: "#ddd",
+    color: "#000",
+    alignSelf: "flex-start",
   },
   inputContainer: {
     flexDirection: "row",
@@ -96,5 +154,6 @@ const styles = StyleSheet.create({
     backgroundColor: "#007AFF",
     padding: 10,
     borderRadius: 50,
+    marginLeft: 10,
   },
 });

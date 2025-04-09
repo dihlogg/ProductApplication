@@ -18,6 +18,7 @@ import ProductList from "@/components/ProductList";
 import Categories from "@/components/Categories";
 import { API_ENDPOINTS } from "@/service/apiService";
 import Features from "@/components/Features";
+import ChatWootWidget from "@/components/ChatwootWebView";
 
 type Props = {};
 
@@ -70,6 +71,9 @@ const HomeScreen = (props: Props) => {
         />
       </View>
       <ProductList products={products} flatlist={false} />
+      <View style={{ height: 400 }}>
+        <ChatWootWidget />
+      </View>
       </ScrollView>
     </GestureHandlerRootView>
   );
