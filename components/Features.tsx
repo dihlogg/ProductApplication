@@ -33,7 +33,7 @@ const Features = (props: Props) => {
     <View style={styles.container}>
       <View style={styles.titleWrapper}>
         <View style={styles.timerWrapper}>
-          <Text style={styles.title}>Featured Products</Text>
+          <Text style={styles.title}>Featured Products 🔥🔥</Text>
         </View>
         <TouchableOpacity>
           <Text style={styles.titleBtn}>See All</Text>

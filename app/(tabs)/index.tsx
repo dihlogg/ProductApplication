@@ -29,7 +29,7 @@ const HomeScreen = (props: Props) => {
   const [featuredProducts, setFeaturedProducts] = useState<ProductType[]>([]);
   const [categories, setCategories] = useState<CategoryType[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [chatVisible, setChatVisible] = useState(true);
+  const [chatVisible, setChatVisible] = useState(false);
 
   useEffect(() => {
     getCategories();

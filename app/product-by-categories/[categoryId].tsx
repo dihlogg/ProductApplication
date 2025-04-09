@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet } from "react-native";
+import { View, Text, StyleSheet, ScrollView } from "react-native";
 import React, { useEffect, useState } from "react";
 import { useLocalSearchParams } from "expo-router";
 import axios from "axios";
@@ -14,11 +14,6 @@ const ProductByCategories = (props: Props) => {
   const [products, setProducts] = useState<ProductType[]>([]);
   const [categoryName, setCategoryName] = useState<string>("");
   const navigation = useNavigation();
-
-//   useEffect(() => {
-//     navigation.setOptions({ title: categoryName });
-//   }, []);
-
   useEffect(() => {
     getProductByCategories();
     getCategoryName();
@@ -50,9 +45,11 @@ const ProductByCategories = (props: Props) => {
     }
   };
   return (
-    <View style={styles.productContainer}>
-      <ProductList products={products} flatlist={false} />
-    </View>
+    <ScrollView contentContainerStyle={styles.productContainer}>
+      <View style={styles.productContainer}>
+        <ProductList products={products} flatlist={false} />
+      </View>
+    </ScrollView>
   );
 };
 
@@ -63,6 +60,6 @@ const styles = StyleSheet.create({
     marginHorizontal: 20,
   },
   productContainer: {
-    marginTop: 20,
+    marginTop: 10,
   }
 });
