@@ -11,6 +11,7 @@ import { ProductType } from "@/types/type";
 import ProductItem from "./ProductItem";
 import { API_ENDPOINTS } from "@/service/apiService";
 import axios from "axios";
+import { Ionicons } from "@expo/vector-icons";
 
 type Props = {};
 
@@ -33,7 +34,10 @@ const Features = (props: Props) => {
     <View style={styles.container}>
       <View style={styles.titleWrapper}>
         <View style={styles.timerWrapper}>
-          <Text style={styles.title}>Featured Products 🔥🔥</Text>
+          <Text style={styles.title}>Featured Products</Text>
+          <Ionicons name="trending-up-outline" size={20} color={"#FE2020"} />
+          <Ionicons name="trending-up-outline" size={20} color={"#FE2020"} />
+          <Ionicons name="trending-up-outline" size={20} color={"#FE2020"} />
         </View>
         <TouchableOpacity>
           <Text style={styles.titleBtn}>See All</Text>

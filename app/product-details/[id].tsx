@@ -138,30 +138,21 @@ const ProductDetails = (props: Props) => {
               </Animated.Text>
 
               <Text
-                style={{
-                  fontSize: 18,
-                  fontWeight: "bold",
-                  marginBottom: 10,
-                  marginTop: 10,
-                }}
+                style={{ fontSize: 18, fontWeight: "bold", marginVertical: 10 }}
               >
-                🔍 Gợi ý sản phẩm tương tự
+                🔍 Recommend Products
               </Text>
+
               <FlatList
                 data={similarProducts}
                 horizontal
+                contentContainerStyle={{ paddingHorizontal: 10, marginTop: 10 }}
                 keyExtractor={(item) => item.id ?? Math.random().toString()}
                 renderItem={({ item, index }) => (
-                  <View style={{ width: 220, marginRight: 10 }}>
-                    <ProductItem
-                      item={item}
-                      index={index}
-                      productType="regular"
-                    />
-                  </View>
+                  <SimilarProducts item={item} index={index} />
                 )}
+                showsHorizontalScrollIndicator={false}
               />
-              <SimilarProducts products={similarProducts} />
               <Animated.View
                 style={styles.productVariationWrapper}
                 entering={FadeInDown.delay(1300).duration(500)}
