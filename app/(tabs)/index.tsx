@@ -99,6 +99,6 @@ const styles = StyleSheet.create({
     bottom: 20,
     width: 100,
     height: 400,
-    zIndex: 100, // đảm bảo hiển thị trên ScrollView
+    zIndex: 100,
   },
 });

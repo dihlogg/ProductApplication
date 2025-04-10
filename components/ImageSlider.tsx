@@ -58,7 +58,8 @@ const ImageSlider = ({ imageList }: Props) => {
           >
             <Image
               source={{ uri: item }}
-              style={{ width: 375, height: 300, padding: 10, borderRadius: 10 }}
+              style={{ width: 375, height: 310, padding: 10, borderRadius: 10 }}
+              resizeMode="contain"
             />
           </View>
         )}
