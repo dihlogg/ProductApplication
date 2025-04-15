@@ -2,7 +2,7 @@ import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import React, { useEffect, useState } from "react";
 import { useHeaderHeight } from "@react-navigation/elements";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
-import { Stack, useLocalSearchParams } from "expo-router";
+import { router, Stack, useLocalSearchParams } from "expo-router";
 import { Colors } from "@/constants/Colors";
 import { Ionicons } from "@expo/vector-icons";
 import { RegisterRequest } from "@/types/register-request";
@@ -25,6 +25,14 @@ const ProfileScreen = (props: Props) => {
 
     fetchUserInfo();
   }, []);
+  const handleLogout = async () => {
+    try {
+      await AsyncStorage.removeItem("userInfo"); // Xoá thông tin user
+      router.replace("/signin");
+    } catch (error) {
+      console.error("Logout error:", error);
+    }
+  };
 
   return (
     <GestureHandlerRootView>
@@ -66,7 +74,7 @@ const ProfileScreen = (props: Props) => {
             <Ionicons name="settings-outline" size={20} color={Colors.black} />
             <Text style={styles.buttonText}>Settings</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.button}>
+          <TouchableOpacity style={styles.button} onPress={handleLogout}>
             <Ionicons name="log-out-outline" size={20} color={Colors.black} />
             <Text style={styles.buttonText}>Logout</Text>
           </TouchableOpacity>
