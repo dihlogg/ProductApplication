@@ -6,80 +6,100 @@ import {
   TouchableOpacity,
   FlatList,
 } from "react-native";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useHeaderHeight } from "@react-navigation/elements";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { Stack } from "expo-router";
+import { CartInfo } from "@/types/cart-details";
+import { RegisterRequest } from "@/types/register-request";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import axios from "axios";
+import { API_ENDPOINTS } from "@/service/apiService";
 
 type Props = {};
 
-type Order = {
-  id: string;
-  dateOrder: string;
-  status: string;
-  totalPrice: string;
-  image: string;
-  productName: string;
-  quantity: string;
-};
-
-// Dữ liệu mẫu cho các tab
-const newOrders: Order[] = [
-  {
-    id: "1",
-    dateOrder: "17/12/2004",
-    status: "New Order",
-    totalPrice: "$799.99",
-    image:
-      "https://cdn.viettelstore.vn/Images/Product/ProductImage/803717658.jpeg",
-    productName: "Kids' Bunk Bed",
-    quantity: "1",
-  },
-];
-
-const deliveryOrders: Order[] = [
-  {
-    id: "2",
-    dateOrder: "20/12/2004",
-    status: "In Delivery",
-    totalPrice: "$499.99",
-    image:
-      "https://cdn.viettelstore.vn/Images/Product/ProductImage/803717658.jpeg",
-    productName: "Gaming Chair",
-    quantity: "1",
-  },
-];
-
-const completedOrders: Order[] = [
-  {
-    id: "3",
-    dateOrder: "25/12/2004",
-    status: "Completed",
-    totalPrice: "$299.99",
-    image:
-      "https://cdn.viettelstore.vn/Images/Product/ProductImage/803717658.jpeg",
-    productName: "Desk Lamp",
-    quantity: "2",
-  },
-];
-
 const HistoryScreen = (props: Props) => {
   const headerHeight = useHeaderHeight();
-  const [activeTab, setActiveTab] = useState<"New" | "Delivery" | "Completed">(
-    "Delivery"
-  );
+  const [activeTab, setActiveTab] = useState<
+    "NewOrder" | "Delivery" | "Completed"
+  >("Delivery");
+  const [transactions, setTransactions] = useState<CartInfo[]>([]);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [userInfo, setUserInfo] = useState<RegisterRequest>();
+  const [transactionCache, setTransactionCache] = useState<
+    Record<string, CartInfo[]>
+  >({});
 
-  // Hàm để chọn dữ liệu dựa trên tab đang hoạt động
+  useEffect(() => {
+    const fetchUserInfo = async () => {
+      const userData = await AsyncStorage.getItem("userInfo");
+      if (userData) {
+        const parsed = JSON.parse(userData);
+        setUserInfo(parsed);
+      }
+    };
+    fetchUserInfo();
+  }, []);
+
+  useEffect(() => {
+    if (userInfo) {
+      GetTransactions(activeTab);
+    }
+  }, [activeTab, userInfo]);
+
+  const GetTransactions = async (status: string) => {
+    if (!userInfo) return;
+    // Nếu đã có cache → không gọi API lại
+    if (transactionCache[status]) {
+      setTransactions(transactionCache[status]);
+      return;
+    }
+    try {
+      setLoading(true);
+      const response = await axios.get(API_ENDPOINTS.GET_TRANSACTIONS, {
+        params: {
+          userId: userInfo.id,
+          status: status,
+        },
+      });
+      setTransactions(response.data);
+      console.log("Transactions:", response.data);
+    } catch (error) {
+      console.error("Error fetching transactions:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+  const UpdateCartStatus = async (id: string, newStatus: string) => {
+    try {
+      const response = await axios.put(API_ENDPOINTS.UPDATE_CART_STATUS, {
+        cartInfoId: id,
+        status: newStatus,
+      });
+      GetTransactions(activeTab);
+      return true;
+    } catch (error) {
+      console.error("Exception update:", error);
+      return false;
+    }
+  };
+  const deleteCartInfo = async (id: string) => {
+    const response = await axios.delete(
+      `${API_ENDPOINTS.DELETE_CART_INFO}/${id}`
+    );
+    GetTransactions(activeTab);
+  };
+
   const getOrders = () => {
     switch (activeTab) {
-      case "New":
-        return newOrders;
+      case "NewOrder":
+        return transactions.filter((order) => order.status === "NewOrder");
       case "Delivery":
-        return deliveryOrders;
+        return transactions.filter((order) => order.status === "Delivery");
       case "Completed":
-        return completedOrders;
+        return transactions.filter((order) => order.status === "Completed");
       default:
-        return newOrders;
+        return [];
     }
   };
 
@@ -104,13 +124,13 @@ const HistoryScreen = (props: Props) => {
         {/* Tab Navigation */}
         <View style={styles.tabContainer}>
           <TouchableOpacity
-            style={[styles.tab, activeTab === "New" && styles.activeTab]}
-            onPress={() => setActiveTab("New")}
+            style={[styles.tab, activeTab === "NewOrder" && styles.activeTab]}
+            onPress={() => setActiveTab("NewOrder")}
           >
             <Text
               style={[
                 styles.tabText,
-                activeTab === "New" && styles.activeTabText,
+                activeTab === "NewOrder" && styles.activeTabText,
               ]}
             >
               New
@@ -144,33 +164,39 @@ const HistoryScreen = (props: Props) => {
           </TouchableOpacity>
         </View>
 
-        {/* Danh sách đơn hàng */}
         <FlatList
           data={getOrders()}
-          keyExtractor={(item) => item.id}
+          keyExtractor={(item, index) => item.id ?? index.toString()}
           renderItem={({ item }) => (
             <View style={styles.orderItem}>
-              {/* Dòng 1: Order ID và Date */}
               <View style={styles.orderHeader}>
-                <Text style={styles.orderId}>Order #{item.id}</Text>
+                <Text style={styles.orderId}>
+                  Order #{item.id?.slice(0, 5)}
+                </Text>
                 <Text style={styles.dateOrder}>{item.dateOrder}</Text>
               </View>
-
-              {/* Dòng 2: Hình ảnh và thông tin Items/Total */}
               <View style={styles.orderContent}>
-                <Image source={{ uri: item.image }} style={styles.image} />
+                <Image
+                  source={{
+                    uri: item.cartDetails[0]?.productImages?.[0]?.imageUrl,
+                  }}
+                  style={styles.image}
+                />
                 <View style={styles.infoContainer}>
                   <Text style={styles.productDetails}>
-                    Items: {item.quantity}
+                    Items:{" "}
+                    {item.cartDetails.reduce(
+                      (sum, detail) => sum + detail.quantity,
+                      0
+                    )}
                   </Text>
                   <Text style={styles.productDetails}>
-                    Total: {item.totalPrice}
+                    Total: {item.totalPrice.toLocaleString("vi-VN")} ₫
                   </Text>
                 </View>
-                <Text style={styles.detailsText}>Details {'>'}</Text>
+                <Text style={styles.detailsText}>Details {">"}</Text>
               </View>
 
-              {/* Dòng 3: Trạng thái và Details */}
               <View style={styles.orderFooter}>
                 <View
                   style={[styles.statusContainer, getStatusStyle(item.status)]}
@@ -180,17 +206,27 @@ const HistoryScreen = (props: Props) => {
                   />
                   <Text style={styles.statusText}>{item.status}</Text>
                 </View>
-                {activeTab === "Delivery" && item.status === "In Delivery" && (
-                <TouchableOpacity
-                  style={styles.receivedButton}
-                  onPress={() => {
-                    // TODO: xử lý khi người dùng nhấn nút Received
-                    console.log(`Order ${item.id} marked as received`);
-                  }}
-                >
-                  <Text style={styles.receivedButtonText}>Received</Text>
-                </TouchableOpacity>
-              )}
+                {activeTab === "Delivery" && item.status === "Delivery" && (
+                  <TouchableOpacity
+                    style={styles.receivedButton}
+                    onPress={async () => {
+                      const success = await UpdateCartStatus(
+                        item.id ?? "",
+                        "Completed"
+                      );
+                    }}
+                  >
+                    <Text style={styles.receivedButtonText}>Received</Text>
+                  </TouchableOpacity>
+                )}
+                {activeTab === "NewOrder" && item.status === "NewOrder" && (
+                  <TouchableOpacity
+                    style={styles.cancelButton}
+                    onPress={() => deleteCartInfo(item.id ?? "")} // Gọi hàm ở đây
+                  >
+                    <Text style={styles.receivedButtonText}>Cancel Order</Text>
+                  </TouchableOpacity>
+                )}
               </View>
             </View>
           )}
@@ -271,9 +307,9 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   productDetails: {
-    fontSize: 14,
+    fontSize: 16,
     color: "#666",
-    marginBottom: 4,
+    marginBottom: 2,
   },
   orderFooter: {
     flexDirection: "row",
@@ -324,5 +360,12 @@ const styles = StyleSheet.create({
   receivedButtonText: {
     color: "#fff",
     fontWeight: "bold",
+  },
+  cancelButton: {
+    backgroundColor: "#FE2020",
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    alignSelf: "flex-end",
   },
 });

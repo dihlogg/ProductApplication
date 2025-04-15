@@ -34,6 +34,7 @@ const CartScreen = (props: Props) => {
   );
   const headerHeight = useHeaderHeight();
   const [isSuccessModalVisible, setIsSuccessModalVisible] = useState(false);
+  const [loadingProducts, setLoadingProducts] = useState<{ [key: string]: boolean }>({});
 
   useEffect(() => {
     const fetchUserInfoAndConnect = async () => {
@@ -99,27 +100,25 @@ const CartScreen = (props: Props) => {
 
   const updateQuantity = async (productId: string, newQuantity: number) => {
     if (newQuantity < 1) return;
-
+  
+    if (loadingProducts[productId]) return;
+  
     try {
+      setLoadingProducts((prev) => ({ ...prev, [productId]: true }));
+  
       const userData = await AsyncStorage.getItem("userInfo");
       if (!userData) return;
-
+  
       const user = JSON.parse(userData);
       const userId: string = user.id;
-
-      console.log(
-        `Sending update: User ${userId}, Product ${productId}, New Quantity ${newQuantity}`
-      );
-
+  
       const response = await axios.post(API_ENDPOINTS.POST_CART_REDIS, {
         userId,
         productId,
         quantity: newQuantity,
       });
-
+  
       if (response.status === 200) {
-        console.log("Update success");
-
         setCartProducts((prevProducts) =>
           prevProducts.map((item) =>
             item.id === productId
@@ -129,10 +128,12 @@ const CartScreen = (props: Props) => {
         );
       }
     } catch (error) {
-      console.error("Error updating quantity:", error);
       Alert.alert("Error", "Failed to update quantity.");
+    } finally {
+      setLoadingProducts((prev) => ({ ...prev, [productId]: false }));
     }
   };
+  
 
   const removeFromCart = (productId: string) => {
     Alert.alert(
@@ -237,8 +238,8 @@ const CartScreen = (props: Props) => {
               <CartItem
                 item={item}
                 updateQuantity={updateQuantity}
-                removeFromCart={removeFromCart}
-              />
+                removeFromCart={removeFromCart} 
+                loadingProducts={loadingProducts}/>
             </Animated.View>
           )}
         />
@@ -290,10 +291,12 @@ const CartItem = ({
   item,
   updateQuantity,
   removeFromCart,
+  loadingProducts,
 }: {
   item: CartProductType;
   updateQuantity: (productId: string, newQuantity: number) => void;
   removeFromCart: (productId: string) => void;
+  loadingProducts: { [key: string]: boolean };
 }) => {
   const imageUrl =
     item?.productImages?.[0]?.imageUrl ||
@@ -324,6 +327,7 @@ const CartItem = ({
             <View style={styles.quantityControlWrapper}>
               <TouchableOpacity
                 style={styles.quantityControl}
+                disabled={loadingProducts[item.id ?? ""]}
                 onPress={() =>
                   item.id &&
                   updateQuantity(item.id, (item.cartQuantity || 0) - 1)
@@ -374,127 +378,134 @@ export default CartScreen;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingHorizontal: 20,
-  },
-  footer: {
-    flexDirection: "row",
-    padding: 15,
-    backgroundColor: Colors.white,
-  },
-  priceInforWrapper: {
-    flex: 1,
-    justifyContent: "center",
-  },
-  totalText: {
-    fontSize: 17,
-    fontWeight: 600,
-    color: Colors.black,
-  },
-  checkoutBtn: {
-    flex: 1,
-    backgroundColor: Colors.primary,
-    height: 40,
-    justifyContent: "center",
-    alignItems: "center",
-    borderRadius: 5,
-  },
-  checkoutBtnText: {
-    fontSize: 16,
-    fontWeight: 500,
-    color: Colors.white,
+    paddingHorizontal: 10,
+    backgroundColor: "#F8F8F8",
   },
   itemWrapper: {
+    backgroundColor: "white",
     flexDirection: "row",
-    alignItems: "center",
-    padding: 10,
+    padding: 15,
+    borderRadius: 12,
     marginBottom: 10,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: Colors.lightGray,
-    borderRadius: 5,
+    shadowColor: "#000",
+    shadowOpacity: 0.05,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 4,
+    elevation: 2,
   },
   itemImg: {
-    width: 100,
-    height: 100,
-    borderRadius: 5,
-    marginRight: 10,
+    width: 60,
+    height: 60,
+    borderRadius: 8,
+    marginRight: 15,
   },
   itemInfoWrapper: {
     flex: 1,
-    alignSelf: "flex-start",
-    gap: 10,
+    justifyContent: "space-between",
   },
   itemText: {
     fontSize: 16,
-    fontWeight: 500,
-    color: Colors.black,
+    fontWeight: "500",
+    color: "#333",
+    marginBottom: 4,
   },
   textVND: {
-    color: "red",
-    fontWeight: "600",
     fontSize: 18,
-    textDecorationLine: "none",
+    fontWeight: "bold",
+    color: "#FE2020",
   },
   itemControlWrapper: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
+    marginTop: 8,
   },
   quantityControlWrapper: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 15,
+    gap: 10,
   },
   quantityControl: {
     padding: 5,
-    borderWidth: 1,
-    borderColor: Colors.lightGray,
-    borderRadius: 5,
+    backgroundColor: "#EEE",
+    borderRadius: 6,
   },
   quantityControlDisabled: {
-    opacity: 0.5,
+    backgroundColor: "#ccc",
   },
   maxQuantityText: {
-    fontSize: 14,
-    fontWeight: 500,
-    color: "red",
-    textAlign: "center",
+    color: "#FE2020",
+    fontSize: 12,
+    marginTop: 4,
+  },
+  footer: {
+    padding: 15,
+    backgroundColor: "#FFF",
+    borderTopWidth: 1,
+    borderTopColor: "#DDD",
+    shadowColor: "#000",
+    shadowOpacity: 0.05,
+    shadowOffset: { width: 0, height: -2 },
+    shadowRadius: 4,
+    elevation: 4,
+  },
+  priceInforWrapper: {
+    marginBottom: 10,
+    alignItems: "center",
+  },
+  totalText: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#000",
+  },
+  checkoutBtn: {
+    backgroundColor: "#6200EE",
+    paddingVertical: 12,
+    borderRadius: 8,
+    alignItems: "center",
+  },
+  checkoutBtnText: {
+    color: "#FFF",
+    fontWeight: "bold",
+    fontSize: 16,
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: "rgba(0,0,0,0.5)",
+    backgroundColor: "rgba(0,0,0,0.6)",
     justifyContent: "center",
     alignItems: "center",
   },
   modalContent: {
-    width: 300,
     backgroundColor: "white",
-    borderRadius: 15,
     padding: 20,
+    borderRadius: 12,
     alignItems: "center",
+    width: "80%",
   },
   successIcon: {
-    width: 80,
-    height: 80,
+    width: 60,
+    height: 60,
     marginBottom: 10,
   },
   successTitle: {
-    fontSize: 22,
+    fontSize: 20,
     fontWeight: "bold",
     marginBottom: 10,
   },
   successMessage: {
-    fontSize: 16,
+    fontSize: 14,
+    color: "#666",
     textAlign: "center",
     marginBottom: 20,
   },
   continueBtn: {
-    backgroundColor: "red",
+    backgroundColor: "#6200EE",
     paddingVertical: 10,
     paddingHorizontal: 20,
-    borderRadius: 10,
+    borderRadius: 8,
   },
   continueBtnText: {
-    color: "white",
-    fontSize: 16,
+    color: "#FFF",
+    fontWeight: "bold",
   },
 });

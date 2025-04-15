@@ -7,11 +7,15 @@ export interface CartInfo {
 }
 
 export interface CartDetailInfo {
-    image: string;
     productName: string;
     price: number;
     quantity: number;
+    productImages: ProductImage[];
 }
+
+export interface ProductImage {
+    imageUrl: string;
+  }
 
 export interface CartInfoRequestDto {
     status: string;

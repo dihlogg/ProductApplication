@@ -52,8 +52,7 @@ const SignInScreen = (props: Props) => {
         console.log("User info saved:", user);
 
         Alert.alert("Success", "Login successful!");
-        router.dismissAll();
-        router.push({ pathname: "/(tabs)", params: { id: user.id } });
+        router.replace({ pathname: "/(tabs)", params: { id: user.id } });
       } else {
         Alert.alert("Error", "Invalid credentials");
       }

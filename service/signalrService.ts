@@ -1,6 +1,6 @@
 import { HubConnectionBuilder } from "@microsoft/signalr";
 
-const API_URL = "http://192.168.1.187:5117";
+const API_URL = "http://172.20.10.8:5117";
 
 const connectSignalR = async (
   userId: string | null | undefined,
