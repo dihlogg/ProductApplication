@@ -312,7 +312,7 @@ const CartItem = ({
         resizeMode="cover"
       />
       <View style={styles.itemInfoWrapper}>
-        <Text style={styles.itemText}>{item.name}</Text>
+        <Text style={styles.itemTextName}>{item.name}</Text>
         <Text style={styles.itemText}>Only {item.quantity} left</Text>
         <Text style={styles.itemText}>
           {(item.price * (item.cartQuantity || 0)).toLocaleString("vi-VN")}
@@ -404,13 +404,19 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
   },
   itemText: {
-    fontSize: 16,
-    fontWeight: "500",
-    color: "#333",
     marginBottom: 4,
+    fontSize: 16,
+    color: "#666",
+    fontWeight: 400
+  },
+  itemTextName: {
+    marginBottom: 4,
+    fontSize: 16,
+    color: "#333",
+    fontWeight: 600
   },
   textVND: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: "bold",
     color: "#FE2020",
   },
