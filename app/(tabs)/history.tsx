@@ -9,7 +9,7 @@ import {
 import React, { useEffect, useState } from "react";
 import { useHeaderHeight } from "@react-navigation/elements";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
-import { Stack } from "expo-router";
+import { router, Stack } from "expo-router";
 import { CartInfo } from "@/types/cart-details";
 import { RegisterRequest } from "@/types/register-request";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -171,7 +171,7 @@ const HistoryScreen = (props: Props) => {
             <View style={styles.orderItem}>
               <View style={styles.orderHeader}>
                 <Text style={styles.orderId}>
-                  Order #{item.id?.slice(0, 5)}
+                  Order #{item.id?.slice(0, 6)}
                 </Text>
                 <Text style={styles.dateOrder}>{item.dateOrder}</Text>
               </View>
@@ -194,7 +194,16 @@ const HistoryScreen = (props: Props) => {
                     Total: {item.totalPrice.toLocaleString("vi-VN")} ₫
                   </Text>
                 </View>
-                <Text style={styles.detailsText}>Details {">"}</Text>
+                <TouchableOpacity
+                  onPress={() => {
+                    router.push({
+                      pathname: "/order-details/history-order",
+                      params: { data: JSON.stringify(item) }, // truyền cả đơn hàng
+                    });
+                  }}
+                >
+                  <Text style={styles.detailsText}>Details {">"}</Text>
+                </TouchableOpacity>
               </View>
 
               <View style={styles.orderFooter}>
@@ -229,6 +238,11 @@ const HistoryScreen = (props: Props) => {
                 )}
               </View>
             </View>
+          )}
+          ListEmptyComponent={() => (
+            <Text style={{ textAlign: "center", marginTop: 50, color: "#888" }}>
+              No orders found.
+            </Text>
           )}
         />
       </View>

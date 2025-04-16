@@ -48,7 +48,7 @@ const ExploreScreen = ({ item }: Props) => {
                 <Text style={styles.itemTitle}>{item.categoryName}</Text>
                 <Image
                   source={{ uri: `data:image/png;base64,${item.image}` }}
-                  style={{ width: 100, height: 100 }}
+                  style={{ width: 100, height: 100, borderRadius: 15 }}
                 />
               </Animated.View>
             </TouchableOpacity>

@@ -1,4 +1,4 @@
-const API_BASE_URL = "http://172.20.10.8:5117";
+const API_BASE_URL = "http://192.168.1.247:5117";
 
 export const API_ENDPOINTS = {
     GET_CART_INFO: `${API_BASE_URL}/CartInfo/GetCartInfos`,
