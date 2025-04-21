@@ -1,7 +1,6 @@
 import {
   View,
   Text,
-  Touchable,
   TouchableOpacity,
   StyleSheet,
   GestureResponderEvent,
@@ -33,7 +32,7 @@ const TabBarButton = (props: Props) => {
     >
       {routeName === "cart" && (
         <View style={styles.badgeWrapper}>
-          <Text style={styles.badgeText}>1</Text>
+          <Text style={styles.badgeText}></Text>
         </View>
       )}
       
@@ -58,7 +57,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.highlight,
     top: -8,
     right: 17,
-    paddingVertical: 2,
+    paddingVertical: 1,
     paddingHorizontal: 6,
     borderRadius: 10,
     zIndex: 10,
