@@ -1,42 +1,65 @@
-import {
-  View,
-  Text,
-  StyleSheet,
-  Image,
-  FlatList,
-  ScrollView,
-} from "react-native";
-import React from "react";
+import { View, Text, StyleSheet, ScrollView, Image, FlatList } from "react-native";
+import React, { useEffect, useState } from "react";
 import { Stack, useLocalSearchParams } from "expo-router";
-import { useHeaderHeight } from "@react-navigation/elements";
+import axios from "axios";
+import { API_ENDPOINTS } from "@/service/apiService";
+import { CartInfo } from "@/types/cart-details";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { useHeaderHeight } from "@react-navigation/elements";
 
-const OrderDetail = () => {
+const HistoryOrderDetails = () => {
+  const { id } = useLocalSearchParams<{ id: string }>();
   const headerHeight = useHeaderHeight();
-  const { data } = useLocalSearchParams<{ data: string }>();
-  const order = JSON.parse(data);
+  const [transactions, setTransactions] = useState<CartInfo | undefined>();
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    getTransactionById();
+  }, [id]);
+
+  const getTransactionById = async () => {
+    try {
+      setLoading(true);
+      const response = await axios.get(`${API_ENDPOINTS.GET_TRANSACTION_BY_ID}/${id}`);
+      setTransactions(response.data);
+    } catch (error) {
+      console.error("Error fetching transaction:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading || !transactions) {
+    return (
+      <View style={[styles.wrapper, styles.loadingContainer]}>
+        <Text style={styles.loadingText}>Loading...</Text>
+      </View>
+    );
+  }
 
   return (
     <GestureHandlerRootView>
-      <Stack.Screen options={{ headerShown: true, headerTransparent: true, title: "Order Details" }} />
-      <View style={[styles.wrapper, { marginTop: headerHeight }]}>
+      <Stack.Screen
+        options={{ headerShown: true, headerTransparent: false, title: "Order Details" }}
+      />
+      <View style={[styles.wrapper]}>
         <ScrollView contentContainerStyle={styles.container}>
           <View style={styles.orderInfoCard}>
-            <Text style={styles.orderId}>Order #{order.id.slice(0, 6)}</Text>
+            <Text style={styles.orderId}>Order #{transactions.id?.slice(0, 6) || "N/A"}</Text>
             <View style={styles.infoRow}>
               <Text style={styles.label}>Date:</Text>
-              <Text style={styles.value}>{order.dateOrder}</Text>
+              <Text style={styles.value}>{transactions.dateOrder}</Text>
             </View>
             <View style={styles.infoRow}>
               <Text style={styles.label}>Status:</Text>
               <Text style={[styles.value, styles.statusText]}>
-                {order.status}
+                {transactions.status}
               </Text>
             </View>
             <View style={styles.infoRow}>
               <Text style={styles.label}>Total:</Text>
               <Text style={[styles.value, styles.totalText]}>
-                {order.totalPrice.toLocaleString("vi-VN")} ₫
+                {transactions.totalPrice.toLocaleString("vi-VN")} ₫
               </Text>
             </View>
           </View>
@@ -44,13 +67,15 @@ const OrderDetail = () => {
           <Text style={styles.sectionTitle}>Items</Text>
 
           <FlatList
-            data={order.cartDetails}
+            data={transactions.cartDetails}
             keyExtractor={(_, index) => index.toString()}
             scrollEnabled={false}
             renderItem={({ item }) => (
               <View style={styles.card}>
                 <Image
-                  source={{ uri: item.productImages[0]?.imageUrl }}
+                  source={{
+                    uri: item.productImages[0]?.imageUrl || "https://via.placeholder.com/80",
+                  }}
                   style={styles.image}
                 />
                 <View style={styles.itemInfo}>
@@ -71,7 +96,7 @@ const OrderDetail = () => {
   );
 };
 
-export default OrderDetail;
+export default HistoryOrderDetails;
 
 const styles = StyleSheet.create({
   wrapper: {
@@ -158,5 +183,15 @@ const styles = StyleSheet.create({
   totalText: {
     color: "#d97706",
     fontWeight: "600",
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#f9fafb",
+  },
+  loadingText: {
+    fontSize: 18,
+    color: "#333",
   },
 });

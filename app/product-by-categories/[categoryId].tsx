@@ -20,7 +20,7 @@ const ProductByCategories = (props: Props) => {
   }, []);
 
   useEffect(() => {
-    navigation.setOptions({ title: categoryName }); // update categoryName
+    navigation.setOptions({ title: categoryName });
   }, [categoryName]);
 
   const getProductByCategories = async () => {

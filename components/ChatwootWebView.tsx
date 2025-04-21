@@ -51,6 +51,9 @@ const ChatWootWidget = ({ visible }: ChatWootWidgetProps) => {
                 baseUrl: BASE_URL
               });
             };
+            window.addEventListener('chatwoot:ready', function () {
+              window.$chatwoot.toggle('open');
+            });
           })(document,"script");
         </script>
       </body>
@@ -84,9 +87,12 @@ const ChatWootWidget = ({ visible }: ChatWootWidgetProps) => {
       <WebView
         ref={webViewRef}
         originWhitelist={["*"]}
-        source={{ html: htmlContent }}
-        javaScriptEnabled
-        domStorageEnabled
+        source={{ html: htmlContent, baseUrl: "https://app.chatwoot.com" }}
+        javaScriptEnabled={true}
+        domStorageEnabled={true}
+        mixedContentMode="always"
+        allowFileAccess={true}
+        allowUniversalAccessFromFileURLs={true}
         style={styles.webview}
         scrollEnabled={false}
         pointerEvents={visible ? "auto" : "none"}
@@ -121,4 +127,3 @@ const styles = StyleSheet.create({
     backgroundColor: "transparent",
   },
 });
-

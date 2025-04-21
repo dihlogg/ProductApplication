@@ -15,17 +15,4 @@ export interface CartDetailInfo {
 
 export interface ProductImage {
     imageUrl: string;
-  }
-
-export interface CartInfoRequestDto {
-    status: string;
-    dateOrder: string;
-    userId: string;
-    cartDetailDtos: CartDetailRequestDto[];
-}
-
-export interface CartDetailRequestDto {
-    productId: string;
-    quantity: number;
-    totalPrice: number;
 }

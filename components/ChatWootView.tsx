@@ -1,10 +1,23 @@
-import React, { useRef } from 'react';
-import { StyleSheet, View } from 'react-native';
-import { WebView } from 'react-native-webview';
+import { RegisterRequest } from "@/types/register-request";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import React, { useEffect, useRef, useState } from "react";
+import { Keyboard, StyleSheet, View } from "react-native";
+import { WebView } from "react-native-webview";
 
 const ChatWootView = () => {
   const webViewRef = useRef(null);
+  const [userInfo, setUserInfo] = useState<RegisterRequest>();
 
+  // Lấy thông tin user từ AsyncStorage khi component mount
+  useEffect(() => {
+    const fetchUser = async () => {
+      const userInfo = await AsyncStorage.getItem("userInfo");
+      if (userInfo) {
+        setUserInfo(JSON.parse(userInfo));
+      }
+    };
+    fetchUser();
+  }, []);
   const htmlContent = `
     <!DOCTYPE html>
     <html>
@@ -38,12 +51,17 @@ const ChatWootView = () => {
             g.defer = true;
             g.async = true;
             s.parentNode.insertBefore(g,s);
-            g.onload = function() {
+            g.onload = function () {
               window.chatwootSDK.run({
                 websiteToken: '45zXi4fYRWCnYeo7NVJPAuDP',
                 baseUrl: BASE_URL
               });
-              window.addEventListener('chatwoot:ready', function() {
+
+              window.addEventListener('chatwoot:ready', function () {
+                window.$chatwoot.setUser('${userInfo?.id}', {
+                    email: '${userInfo?.userName || ""}',
+                    name: '${userInfo?.userFullName}',
+                  });
                 window.$chatwoot.toggle('open');
               });
             };
@@ -57,10 +75,14 @@ const ChatWootView = () => {
     <View style={styles.fullscreen}>
       <WebView
         ref={webViewRef}
-        originWhitelist={['*']}
-        source={{ html: htmlContent }}
-        javaScriptEnabled
-        domStorageEnabled
+        key={userInfo?.id}
+        originWhitelist={["*"]}
+        source={{ html: htmlContent, baseUrl: "https://app.chatwoot.com" }}
+        javaScriptEnabled={true}
+        domStorageEnabled={true}
+        mixedContentMode="always"
+        allowFileAccess={true}
+        allowUniversalAccessFromFileURLs={true}
         style={styles.webview}
         backgroundColor="transparent"
         scrollEnabled={false}
@@ -71,17 +93,17 @@ const ChatWootView = () => {
 
 const styles = StyleSheet.create({
   fullscreen: {
-    position: 'absolute',
+    position: "absolute",
     top: 0,
     left: 0,
     bottom: 0,
     right: 0,
     zIndex: 1000,
-    pointerEvents: 'box-none',
+    pointerEvents: "box-none",
   },
   webview: {
     flex: 1,
-    backgroundColor: 'transparent',
+    backgroundColor: "transparent",
   },
 });
 

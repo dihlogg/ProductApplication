@@ -195,12 +195,9 @@ const HistoryScreen = (props: Props) => {
                   </Text>
                 </View>
                 <TouchableOpacity
-                  onPress={() => {
-                    router.push({
-                      pathname: "/order-details/history-order",
-                      params: { data: JSON.stringify(item) }, // truyền cả đơn hàng
-                    });
-                  }}
+                  onPress={() =>
+                    router.push(`/history-order-details/${item.id}`)
+                  }
                 >
                   <Text style={styles.detailsText}>Details {">"}</Text>
                 </TouchableOpacity>

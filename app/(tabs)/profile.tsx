@@ -14,6 +14,7 @@ type Props = {};
 const ProfileScreen = (props: Props) => {
   const [userInfo, setUserInfo] = useState<RegisterRequest>();
   const headerHeight = useHeaderHeight();
+  const [webviewKey, setWebviewKey] = useState(Date.now());
 
   useEffect(() => {
     const fetchUserInfo = async () => {
@@ -27,7 +28,8 @@ const ProfileScreen = (props: Props) => {
   }, []);
   const handleLogout = async () => {
     try {
-      await AsyncStorage.removeItem("userInfo"); // Xoá thông tin user
+      await AsyncStorage.removeItem("userInfo"); // delete user info
+      setWebviewKey(Date.now()); // reset web view
       router.replace("/signin");
     } catch (error) {
       console.error("Logout error:", error);
