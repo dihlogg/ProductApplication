@@ -34,7 +34,9 @@ const CartScreen = (props: Props) => {
   );
   const headerHeight = useHeaderHeight();
   const [isSuccessModalVisible, setIsSuccessModalVisible] = useState(false);
-  const [loadingProducts, setLoadingProducts] = useState<{ [key: string]: boolean }>({});
+  const [loadingProducts, setLoadingProducts] = useState<{
+    [key: string]: boolean;
+  }>({});
 
   useEffect(() => {
     const fetchUserInfoAndConnect = async () => {
@@ -100,24 +102,24 @@ const CartScreen = (props: Props) => {
 
   const updateQuantity = async (productId: string, newQuantity: number) => {
     if (newQuantity < 1) return;
-  
+
     if (loadingProducts[productId]) return;
-  
+
     try {
       setLoadingProducts((prev) => ({ ...prev, [productId]: true }));
-  
+
       const userData = await AsyncStorage.getItem("userInfo");
       if (!userData) return;
-  
+
       const user = JSON.parse(userData);
       const userId: string = user.id;
-  
+
       const response = await axios.post(API_ENDPOINTS.POST_CART_REDIS, {
         userId,
         productId,
         quantity: newQuantity,
       });
-  
+
       if (response.status === 200) {
         setCartProducts((prevProducts) =>
           prevProducts.map((item) =>
@@ -133,7 +135,6 @@ const CartScreen = (props: Props) => {
       setLoadingProducts((prev) => ({ ...prev, [productId]: false }));
     }
   };
-  
 
   const removeFromCart = (productId: string) => {
     Alert.alert(
@@ -238,8 +239,9 @@ const CartScreen = (props: Props) => {
               <CartItem
                 item={item}
                 updateQuantity={updateQuantity}
-                removeFromCart={removeFromCart} 
-                loadingProducts={loadingProducts}/>
+                removeFromCart={removeFromCart}
+                loadingProducts={loadingProducts}
+              />
             </Animated.View>
           )}
         />
@@ -407,13 +409,13 @@ const styles = StyleSheet.create({
     marginBottom: 4,
     fontSize: 16,
     color: "#666",
-    fontWeight: 400
+    fontWeight: 400,
   },
   itemTextName: {
     marginBottom: 4,
     fontSize: 16,
     color: "#333",
-    fontWeight: 600
+    fontWeight: 600,
   },
   textVND: {
     fontSize: 16,

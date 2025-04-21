@@ -28,7 +28,7 @@ const ProfileScreen = (props: Props) => {
   }, []);
   const handleLogout = async () => {
     try {
-      await AsyncStorage.removeItem("userInfo"); // delete user info
+      await AsyncStorage.removeItem("userInfo");
       setWebviewKey(Date.now()); // reset web view
       router.replace("/signin");
     } catch (error) {

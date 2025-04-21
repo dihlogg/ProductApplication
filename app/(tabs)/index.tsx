@@ -26,9 +26,8 @@ type Props = {};
 
 const HomeScreen = (props: Props) => {
   const [products, setProducts] = useState<ProductType[]>([]);
-  const [featuredProducts, setFeaturedProducts] = useState<ProductType[]>([]);
   const [categories, setCategories] = useState<CategoryType[]>([]);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [loading, setLoading] = useState<boolean>(true);
   const [chatVisible, setChatVisible] = useState(false);
 
   useEffect(() => {
@@ -37,34 +36,66 @@ const HomeScreen = (props: Props) => {
   }, []);
 
   const getProducts = async () => {
-    const response = await axios.get(API_ENDPOINTS.GET_PRODUCT_INFO);
-    setProducts(response.data);
-    setIsLoading(false);
+    try {
+      setLoading(true);
+      const response = await axios.get(API_ENDPOINTS.GET_PRODUCT_INFO);
+      setProducts(response.data);
+      setLoading(false);
+    } catch (error) {
+      console.error("Error fetching products:", error);
+      setLoading(false);
+    }
   };
 
   const getCategories = async () => {
-    const response = await axios.get(API_ENDPOINTS.GET_CATEGORIES);
-    setCategories(response.data);
-    setIsLoading(false);
+    try {
+      setLoading(true);
+      const response = await axios.get(API_ENDPOINTS.GET_CATEGORIES);
+      setCategories(response.data);
+      setLoading(false);
+    } catch (error) {
+      console.error("Error fetching categories:", error);
+      setLoading(false);
+    }
   };
 
-  if (isLoading) {
-    return (
-      <View>
-        <ActivityIndicator size={"large"} />
-      </View>
-    );
-  }
+  const handleSearch = async (productName: string) => {
+    if (!productName.trim()) {
+      getProducts();
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const response = await axios.get(API_ENDPOINTS.SEARCH_PRODUCT_INFO, {
+        params: { productName },
+      });
+      setProducts(response.data);
+      setLoading(false);
+    } catch (error) {
+      console.error("Error searching products:", error);
+      setLoading(false);
+    }
+  };
+
   const toggleChat = () => {
     setChatVisible(!chatVisible);
   };
+
+  if (loading) {
+    return (
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+        <ActivityIndicator size="large" />
+      </View>
+    );
+  }
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <Stack.Screen
         options={{
           headerShown: true,
-          header: () => <Header />,
+          header: () => <Header onSearch={handleSearch} />,
         }}
       />
       <View style={{ flex: 1 }}>

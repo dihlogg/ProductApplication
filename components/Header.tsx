@@ -1,23 +1,52 @@
-import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
-import React from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  TextInput,
+} from "react-native";
+import React, { useEffect, useState } from "react";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { Colors } from "@/constants/Colors";
-import { Link } from "expo-router";
 
-type Props = {};
+type Props = {
+  onSearch: (query: string) => void;
+};
 
-const Header = (props: Props) => {
+const Header = ({ onSearch }: Props) => {
   const insets = useSafeAreaInsets();
+  const [searchQuery, setSearchQuery] = useState<string>("");
+
+  const handleSearchPress = () => {
+    onSearch(searchQuery); // Trigger search
+  };
+
+  useEffect(() => {
+    if (searchQuery.trim() === "") {
+      onSearch("");
+    }
+  }, [searchQuery]);
+
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
-      <Text style={styles.logo}>Shop</Text>
-      <Link href={'/explore'} asChild>
-      <TouchableOpacity style={styles.searchBar}>
-        <Text style={styles.searchTxt}>Search</Text>
-        <Ionicons name="search-outline" size={24} color={Colors.gray} />
-      </TouchableOpacity>
-      </Link>
+      <Text style={styles.logo}>T-Shop</Text>
+      <View style={styles.searchBar}>
+        <TextInput
+          style={styles.searchInput}
+          placeholder="Search"
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+        />
+        {searchQuery ? (
+          <TouchableOpacity onPress={() => setSearchQuery("")}>
+            <Ionicons name="close-circle" size={20} color={Colors.gray} />
+          </TouchableOpacity>
+        ) : null}
+        <TouchableOpacity onPress={handleSearchPress}>
+          <Ionicons name="search-outline" size={24} color={Colors.gray} />
+        </TouchableOpacity>
+      </View>
     </View>
   );
 };
@@ -46,10 +75,16 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     paddingHorizontal: 10,
     flexDirection: "row",
-    justifyContent: "space-between",
+    alignItems: "center",
     marginTop: 5,
+    gap: 8,
   },
   searchTxt: {
-    color: Colors.black
-  }
+    color: Colors.black,
+  },
+  searchInput: {
+    flex: 1,
+    paddingVertical: 6,
+    fontSize: 16,
+  },
 });

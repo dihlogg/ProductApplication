@@ -4,6 +4,7 @@ export const API_ENDPOINTS = {
     GET_CART_INFO: `${API_BASE_URL}/CartInfo/GetCartInfos`,
     GET_CATEGORIES: `${API_BASE_URL}/Category/GetCategories`,
     GET_PRODUCT_INFO: `${API_BASE_URL}/ProductInfo/GetProductInfos`,
+    SEARCH_PRODUCT_INFO: `${API_BASE_URL}/ProductInfo/SearchProductInfos`,
     GET_PRODUCT_DETAILS: `${API_BASE_URL}/ProductInfo/GetProductDetailsById`,
     GET_PRODUCT_BY_CATEGORY: `${API_BASE_URL}/ProductInfo/GetProductsByCategoryId`,
     LOGIN_USER: `${API_BASE_URL}/UserInfo/LoginUser`,
