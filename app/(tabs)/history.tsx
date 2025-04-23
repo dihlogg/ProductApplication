@@ -17,7 +17,13 @@ import axios from "axios";
 import { API_ENDPOINTS } from "@/service/apiService";
 
 type Props = {};
-
+// parse dateOrder DD/MM/YYYY HH:mm
+const parseDate = (dateStr: string): Date => {
+  const [datePart, timePart] = dateStr.split(" ");
+  const [day, month, year] = datePart.split("/").map(Number);
+  const [hours, minutes] = timePart.split(":").map(Number);
+  return new Date(year, month - 1, day, hours, minutes);
+};
 const HistoryScreen = (props: Props) => {
   const headerHeight = useHeaderHeight();
   const [activeTab, setActiveTab] = useState<
@@ -62,8 +68,19 @@ const HistoryScreen = (props: Props) => {
           status: status,
         },
       });
-      setTransactions(response.data);
-      console.log("Transactions:", response.data);
+      const sortedTransactions = response.data.sort(
+        (a: CartInfo, b: CartInfo) => {
+          const dateA = parseDate(a.dateOrder);
+          const dateB = parseDate(b.dateOrder);
+          return dateB.getTime() - dateA.getTime();
+        }
+      );
+      setTransactions(sortedTransactions);
+      setTransactionCache((prev) => ({
+        ...prev,
+        [status]: sortedTransactions,
+      }));
+      console.log("Sorted Transactions:", sortedTransactions);
     } catch (error) {
       console.error("Error fetching transactions:", error);
     } finally {
@@ -228,7 +245,7 @@ const HistoryScreen = (props: Props) => {
                 {activeTab === "NewOrder" && item.status === "NewOrder" && (
                   <TouchableOpacity
                     style={styles.cancelButton}
-                    onPress={() => deleteCartInfo(item.id ?? "")} // Gọi hàm ở đây
+                    onPress={() => deleteCartInfo(item.id ?? "")}
                   >
                     <Text style={styles.receivedButtonText}>Cancel Order</Text>
                   </TouchableOpacity>
