@@ -4,8 +4,6 @@ import { useHeaderHeight } from "@react-navigation/elements";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { Stack } from "expo-router";
 import ChatWootView from "@/components/ChatWootView";
-import { RegisterRequest } from "@/types/register-request";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const ChatScreen = () => {
   const headerHeight = useHeaderHeight();

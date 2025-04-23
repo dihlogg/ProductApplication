@@ -6,9 +6,11 @@ import {
   ScrollView,
   Alert,
   FlatList,
+  Modal,
+  Image,
 } from "react-native";
 import React, { useEffect, useState } from "react";
-import { router, Stack, useLocalSearchParams } from "expo-router";
+import { router, Stack, useLocalSearchParams, useRouter } from "expo-router";
 import axios from "axios";
 import { ProductType } from "@/types/type";
 import ImageSlider from "@/components/ImageSlider";
@@ -20,8 +22,8 @@ import Animated, { FadeInDown, SlideInDown } from "react-native-reanimated";
 import { API_ENDPOINTS } from "@/service/apiService";
 import { addToCart } from "@/service/cartService";
 import { useNavigation } from "@react-navigation/native";
-import ProductItem from "@/components/ProductItem";
 import SimilarProducts from "@/components/SimilarProducts";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 type Props = {};
 
@@ -30,7 +32,10 @@ const ProductDetails = (props: Props) => {
   const { id } = useLocalSearchParams();
   const [product, setProduct] = useState<ProductType>();
   const navigation = useNavigation();
+  const router = useRouter();
   const [similarProducts, setSimilarProducts] = useState<ProductType[]>([]);
+  const [isSuccessModalVisible, setIsSuccessModalVisible] = useState(false);
+
   useEffect(() => {
     getProductDetails();
   }, []);
@@ -48,17 +53,19 @@ const ProductDetails = (props: Props) => {
   }, [product]);
 
   const getProductDetails = async () => {
-    const response = await axios.get(
-      `${API_ENDPOINTS.GET_PRODUCT_DETAILS}/${id}`
-    );
-    setProduct(response.data);
+      const response = await axios.get(
+        `${API_ENDPOINTS.GET_PRODUCT_DETAILS}/${id}`
+      );
+      setProduct(response.data);
   };
+
   const getSimilarProducts = async (productId: string) => {
-    const response = await axios.get(
-      `${API_ENDPOINTS.GET_SIMILAR_PRODUCTS}/${productId}`
-    );
-    setSimilarProducts(response.data);
+      const response = await axios.get(
+        `${API_ENDPOINTS.GET_SIMILAR_PRODUCTS}/${productId}`
+      );
+      setSimilarProducts(response.data);
   };
+
   const handleAddToCart = async () => {
     if (product?.id) {
       const success = await addToCart(product.id);
@@ -69,6 +76,46 @@ const ProductDetails = (props: Props) => {
       }
     }
   };
+
+  const handleBuyNow = async () => {
+    if (!product?.id) {
+      Alert.alert("Lỗi", "Không tìm thấy sản phẩm.");
+      return;
+    }
+
+    if (product.quantity <= 0) {
+      Alert.alert("Error", "Product sold out!");
+      return;
+    }
+
+    try {
+      const userData = await AsyncStorage.getItem("userInfo");
+      if (!userData) {
+        Alert.alert("Error", "Product not found.");
+        return;
+      }
+      const user = JSON.parse(userData);
+      const userId: string = user.id;
+      const checkoutResponse = await axios.post(API_ENDPOINTS.POST_CART_DETAIL_REDIS, {
+        userId,
+        products: [{ productId: product.id, quantity: 1 }],
+      });
+
+      if (checkoutResponse.status === 200) {
+        setIsSuccessModalVisible(true);
+      } else {
+        Alert.alert("Error", "Checkout failed.");
+      }
+    } catch (error) {
+      Alert.alert("Error", "An error occurred during the purchase.");
+    } finally {
+    }
+  };
+
+  const handleContinueShopping = () => {
+    setIsSuccessModalVisible(false);
+  };
+
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <Stack.Screen
@@ -181,10 +228,38 @@ const ProductDetails = (props: Props) => {
             Add to Cart
           </Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.button}>
+        <TouchableOpacity style={styles.button} onPress={handleBuyNow}>
           <Text style={styles.buttonText}>Buy Now</Text>
         </TouchableOpacity>
       </Animated.View>
+      <Modal
+        animationType="fade"
+        transparent={true}
+        visible={isSuccessModalVisible}
+        onRequestClose={() => setIsSuccessModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Image
+              source={{
+                uri: "https://cdn-icons-png.flaticon.com/512/845/845646.png", // Icon checkmark
+              }}
+              style={styles.successIcon}
+            />
+            <Text style={styles.successTitle}>Success!</Text>
+            <Text style={styles.successMessage}>
+              Your order will be delivered soon.{"\n"}Thank you for choosing our
+              app!
+            </Text>
+            <TouchableOpacity
+              style={styles.continueBtn}
+              onPress={handleContinueShopping}
+            >
+              <Text style={styles.continueBtnText}>CONTINUE SHOPPING</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </GestureHandlerRootView>
   );
 };
@@ -323,5 +398,44 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 500,
     color: Colors.white,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.6)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  modalContent: {
+    backgroundColor: "white",
+    padding: 20,
+    borderRadius: 12,
+    alignItems: "center",
+    width: "80%",
+  },
+  successIcon: {
+    width: 60,
+    height: 60,
+    marginBottom: 10,
+  },
+  successTitle: {
+    fontSize: 20,
+    fontWeight: "bold",
+    marginBottom: 10,
+  },
+  successMessage: {
+    fontSize: 14,
+    color: "#666",
+    textAlign: "center",
+    marginBottom: 20,
+  },
+  continueBtn: {
+    backgroundColor: "#6200EE",
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+  },
+  continueBtnText: {
+    color: "#FFF",
+    fontWeight: "bold",
   },
 });
