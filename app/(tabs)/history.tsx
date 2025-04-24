@@ -125,7 +125,7 @@ const HistoryScreen = (props: Props) => {
     switch (status) {
       case "New Order":
         return styles.statusNew;
-      case "In Delivery":
+      case "Delivery":
         return styles.statusDelivery;
       case "Completed":
         return styles.statusCompleted;
