@@ -9,28 +9,32 @@ import {
   KeyboardAvoidingView,
   Platform,
   ActivityIndicator,
+  Animated,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { router } from "expo-router";
 import axios from "axios";
+import { API_ENDPOINTS } from "@/service/apiService";
+import { Ionicons } from "@expo/vector-icons";
 
-// Define the type for a single product in the chatbot response
-interface Product {
-  price: string;
-  description: string;
-  link: { url: string; label: string };
-}
+const decodeHTML = (html: string) => {
+  const entities: { [key: string]: string } = {
+    "&": "&",
+    "<": "<",
+    ">": ">",
+    '"': '"',
+    "'": "'",
+    "&quot;": '"',
+    "&apos;": "'",
+    "&nbsp;": " ",
+    "&amp;": "&",
+  };
 
-// Define the type for a single message
-interface Message {
-  id: number;
-  text: string;
-  sender: "user" | "bot";
-  timestamp: string;
-  link?: { url: string; label: string };
-  products?: Product[]; // Sử dụng Product thay vì ProductType
-}
-
+  return html.replace(
+    /&(?:amp|lt|gt|quot|apos|nbsp);/g,
+    (match) => entities[match] || match
+  );
+};
 const CustomChatView = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputText, setInputText] = useState<string>("");
@@ -38,42 +42,118 @@ const CustomChatView = () => {
   const [isTyping, setIsTyping] = useState(false);
   const flatListRef = useRef<FlatList>(null);
 
+  const dot1Opacity = useRef(new Animated.Value(0.3)).current;
+  const dot2Opacity = useRef(new Animated.Value(0.3)).current;
+  const dot3Opacity = useRef(new Animated.Value(0.3)).current;
+
+  useEffect(() => {
+    if (isTyping) {
+      const animateDot = (dot: Animated.Value, delay: number) => {
+        return Animated.loop(
+          Animated.sequence([
+            Animated.timing(dot, {
+              toValue: 1,
+              duration: 300,
+              delay,
+              useNativeDriver: true,
+            }),
+            Animated.timing(dot, {
+              toValue: 0.3,
+              duration: 300,
+              useNativeDriver: true,
+            }),
+          ])
+        );
+      };
+
+      const dot1Animation = animateDot(dot1Opacity, 0);
+      const dot2Animation = animateDot(dot2Opacity, 100);
+      const dot3Animation = animateDot(dot3Opacity, 200);
+
+      dot1Animation.start();
+      dot2Animation.start();
+      dot3Animation.start();
+
+      return () => {
+        dot1Animation.stop();
+        dot2Animation.stop();
+        dot3Animation.stop();
+      };
+    }
+  }, [isTyping]);
+
+  // Lấy thông tin người dùng từ AsyncStorage
   useEffect(() => {
     const fetchUser = async () => {
-      const userInfo = await AsyncStorage.getItem("userInfo");
-      if (userInfo) {
-        setUserInfo(JSON.parse(userInfo));
+      try {
+        const userInfo = await AsyncStorage.getItem("userInfo");
+        if (userInfo) {
+          setUserInfo(JSON.parse(userInfo));
+        }
+      } catch (error) {
+        console.error("Error fetching user info:", error);
       }
     };
     fetchUser();
   }, []);
 
+  // Lấy lịch sử chat từ API GetMessages
   useEffect(() => {
-    const loadMessages = async () => {
-      const storedMessages = await AsyncStorage.getItem("chatMessages");
-      if (storedMessages) {
-        setMessages(JSON.parse(storedMessages));
+    const loadMessagesFromServer = async () => {
+      if (!userInfo?.id) return;
+      try {
+        const response = await axios.get(
+          `${API_ENDPOINTS.GET_MESSAGES}/${userInfo.id}`
+        );
+        const serverMessages = response.data.map((msg: any) => {
+          let messageText = msg.message;
+          let products: Product[] | undefined = undefined;
+
+          // Xử lý tin nhắn bot dạng JSON
+          if (msg.sender === "bot") {
+            try {
+              const parsedJson = JSON.parse(msg.message);
+              if (Array.isArray(parsedJson) && parsedJson[0]?.output) {
+                messageText = parsedJson[0].output;
+                products = parseBotMessage(messageText).products;
+              } else {
+                products = parseBotMessage(messageText).products;
+              }
+            } catch (e) {
+              console.warn("Failed to parse bot message JSON:", msg.message);
+              products = parseBotMessage(messageText).products;
+            }
+          }
+
+          return {
+            id: msg.id,
+            text: messageText,
+            sender: msg.sender,
+            timestamp: msg.timestamp,
+            products,
+          };
+        });
+        console.log("Server Messages:", serverMessages);
+        setMessages(serverMessages);
+      } catch (error) {
+        console.error("Error loading messages from server:", error);
       }
     };
-    loadMessages();
-  }, []);
+    loadMessagesFromServer();
+  }, [userInfo]);
 
-  const saveMessages = async (newMessages: Message[]) => {
-    await AsyncStorage.setItem("chatMessages", JSON.stringify(newMessages));
-  };
-
-  // Hàm parseBotMessage được cập nhật để trả về kiểu Product[]
+  // Hàm parseBotMessage
   const parseBotMessage = (htmlText: string): { products: Product[] } => {
     console.log("Parsing input:", htmlText);
 
-    // Tách các sản phẩm dựa trên dòng trống "\n\n"
+    // Tách các sản phẩm dựa trên dòng bắt đầu bằng "Giá của"
     const productSections = htmlText
-      .split("\n\n")
-      .filter((section) => section.trim());
+      .split(/(?=Giá của)/) // Tách tại vị trí bắt đầu bằng "Giá của" mà không loại bỏ pattern
+      .filter((section) => section.trim())
+      .filter((section) => section.includes("<a href")); // Chỉ giữ các section có liên kết
 
     const products: Product[] = productSections
       .map((section) => {
-        // Tìm liên kết trong section
         const linkMatch = section.match(
           /<a href="myapp:\/\/product\/(.*?)">(.*?)<\/a>/
         );
@@ -81,7 +161,6 @@ const CustomChatView = () => {
           ? { url: linkMatch[1], label: linkMatch[2] }
           : null;
 
-        // Tách giá và mô tả
         const lines = section.split("\n").filter((line) => line.trim());
         let price = "";
         let description = "";
@@ -90,7 +169,7 @@ const CustomChatView = () => {
           if (line.includes("Giá")) {
             price = line
               .replace(
-                /.*Giá\s*(?:của sản phẩm là)?\s*([0-9.]+|price)\.?\s*/,
+                /.*Giá\s*(?:của\s*(?:sản phẩm\s*(?:là)?)?)?\s*([0-9.]+|price)\.?\s*/,
                 "$1"
               )
               .trim();
@@ -105,62 +184,18 @@ const CustomChatView = () => {
           link: link || { url: "", label: "" },
         };
       })
-      .filter((product) => product.link.url); // Chỉ giữ các sản phẩm có liên kết hợp lệ
+      .filter((product) => product.link.url);
 
     console.log("Parsed products:", products);
     return { products };
   };
 
-  const getAIResponse = async (userInput: string): Promise<string> => {
-    try {
-      const response = await fetch("http://192.168.1.15:5678/webhook/chatbot", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          message: userInput,
-          userId: userInfo?.id,
-          name: userInfo?.name,
-          phone: userInfo?.phone,
-        }),
-      });
-
-      // Kiểm tra nếu trạng thái phản hồi không phải OK (ví dụ: 200)
-      if (!response.ok) {
-        const errorData = await response.json();
-        console.error(
-          "Phản hồi lỗi từ Webhook:",
-          JSON.stringify(errorData, null, 2)
-        );
-        throw new Error(errorData.message || "Lỗi từ server n8n");
-      }
-
-      const data = await response.json();
-      console.log("Phản hồi từ Webhook n8n:", JSON.stringify(data, null, 2));
-
-      // Xử lý các cấu trúc phản hồi khác nhau
-      let botResponse;
-      if (Array.isArray(data) && data.length > 0 && data[0]?.output) {
-        botResponse = data[0].output;
-      } else if (data?.output) {
-        botResponse = data.output;
-      } else {
-        botResponse = "Không nhận được phản hồi từ server.";
-      }
-
-      return botResponse;
-    } catch (error) {
-      console.error("Lỗi trong getAIResponse:", error);
-      return "Đã xảy ra lỗi khi xử lý. Vui lòng thử lại sau.";
-    }
-  };
-
+  // Xử lý gửi tin nhắn qua API PostMessage
   const handleSend = async () => {
-    if (!inputText.trim()) return;
+    if (!inputText.trim() || !userInfo?.id) return;
 
     const userMessage: Message = {
-      id: Date.now(),
+      id: Date.now().toString(),
       text: inputText,
       sender: "user",
       timestamp: new Date().toISOString(),
@@ -168,36 +203,96 @@ const CustomChatView = () => {
 
     const updatedMessages = [...messages, userMessage];
     setMessages(updatedMessages);
-    await saveMessages(updatedMessages);
     setInputText("");
     setIsTyping(true);
 
     try {
-      const aiText = await getAIResponse(inputText);
-      console.log("AI Response:", aiText);
+      console.log("Sending to PostMessage:", {
+        Message: inputText,
+        UserId: userInfo.id,
+      });
+      const response = await axios.post(`${API_ENDPOINTS.POST_MESSAGE}`, {
+        Message: inputText,
+        UserId: userInfo.id,
+      });
+      console.log("PostMessage Response:", response.status, response.data);
+
+      // Xử lý response từ API
+      let aiText = response.data;
+      if (Array.isArray(response.data) && response.data[0]?.output) {
+        aiText = response.data[0].output;
+        console.log("Extracted AI Text:", aiText);
+      } else if (typeof response.data === "string") {
+        aiText = response.data;
+      } else {
+        console.error("Invalid response format:", response.data);
+        throw new Error("Invalid response format from PostMessage API");
+      }
+
       const { products } = parseBotMessage(aiText);
+      console.log("Parsed Products:", products);
 
       const botMessage: Message = {
-        id: Date.now() + 1,
-        text: "", // Không cần text nữa vì sẽ hiển thị danh sách sản phẩm
+        id: (Date.now() + 1).toString(),
+        text: aiText,
         sender: "bot",
         timestamp: new Date().toISOString(),
-        products, // Lưu danh sách sản phẩm
+        products,
       };
+      console.log("Bot Message:", botMessage);
 
       const finalMessages = [...updatedMessages, botMessage];
       setMessages(finalMessages);
-      await saveMessages(finalMessages);
-    } catch (error) {
-      console.error("Error in handleSend:", error);
+
+      // Tải lại lịch sử chat từ server
+      console.log("Fetching GetMessages for UserId:", userInfo.id);
+      const refreshResponse = await axios.get(
+        `${API_ENDPOINTS.GET_MESSAGES}/${userInfo.id}`
+      );
+      console.log("GetMessages Response:", refreshResponse.data);
+      const serverMessages = refreshResponse.data.map((msg: any) => {
+        let messageText = msg.message;
+        let products: Product[] | undefined = undefined;
+
+        // Xử lý tin nhắn bot dạng JSON
+        if (msg.sender === "bot") {
+          try {
+            const parsedJson = JSON.parse(msg.message);
+            if (Array.isArray(parsedJson) && parsedJson[0]?.output) {
+              messageText = parsedJson[0].output;
+              products = parseBotMessage(messageText).products;
+            } else {
+              products = parseBotMessage(messageText).products;
+            }
+          } catch (e) {
+            console.warn("Failed to parse bot message JSON:", msg.message);
+            products = parseBotMessage(messageText).products;
+          }
+        }
+
+        return {
+          id: msg.id,
+          text: messageText,
+          sender: msg.sender,
+          timestamp: msg.timestamp,
+          products,
+        };
+      });
+      console.log("Server Messages:", serverMessages);
+      setMessages(serverMessages);
+    } catch (error: any) {
+      console.error(
+        "Error in handleSend:",
+        error.message,
+        error.response?.data
+      );
       const errorMessage: Message = {
-        id: Date.now() + 1,
+        id: (Date.now() + 1).toString(),
         text: "Đã xảy ra lỗi khi xử lý. Vui lòng thử lại sau.",
         sender: "bot",
         timestamp: new Date().toISOString(),
       };
       setMessages([...updatedMessages, errorMessage]);
-      await saveMessages([...updatedMessages, errorMessage]);
     } finally {
       setIsTyping(false);
     }
@@ -214,39 +309,76 @@ const CustomChatView = () => {
         item.sender === "user" ? styles.userBubble : styles.botBubble,
       ]}
     >
-      {item.products ? (
-        item.products.map((product, index) => (
-          <View key={index} style={{ marginBottom: 10 }}>
+      {item.products && item.products.length > 0 ? (
+        <>
+          {/* Hiển thị dòng giới thiệu nếu có */}
+          {item.text.includes("Chúng tôi có một vài gợi ý") && (
             <Text
               style={[
                 styles.messageText,
-                { color: item.sender === "user" ? "#fff" : "#000" },
+                {
+                  color: item.sender === "user" ? "#fff" : "#000",
+                  marginBottom: 10,
+                },
               ]}
             >
-              Giá của sản phẩm: {product.price} VNĐ.
+              {item.text.split("\n")[0]}
             </Text>
-            {product.description && (
-              <Text
-                style={[
-                  styles.messageText,
-                  { color: item.sender === "user" ? "#fff" : "#000" },
-                ]}
-              >
-                {product.description}
-              </Text>
-            )}
-            {product.link && (
-              <TouchableOpacity
-                style={styles.linkButton}
-                onPress={() => {
-                  router.push(`/product-details/${product.link.url}`);
-                }}
-              >
-                <Text style={styles.linkButtonText}>{product.link.label}</Text>
-              </TouchableOpacity>
-            )}
-          </View>
-        ))
+          )}
+          {/* Hiển thị danh sách sản phẩm */}
+          {item.products.map((product, index) => (
+            <View key={index} style={{ marginBottom: 5 }}>
+              {/* Tiêu đề sản phẩm */}
+              {product.link.label && (
+                <Text
+                  style={[
+                    styles.messageText,
+                    {
+                      color: item.sender === "user" ? "#fff" : "#000",
+                      fontWeight: "bold",
+                      marginBottom: 5,
+                    },
+                  ]}
+                >
+                  {product.link.label}
+                </Text>
+              )}
+              {/* Giá sản phẩm */}
+              {product.price && (
+                <Text
+                  style={[
+                    styles.messageText,
+                    { color: item.sender === "user" ? "#fff" : "#000" },
+                  ]}
+                >
+                  {product.price}
+                </Text>
+              )}
+              {/* Mô tả sản phẩm */}
+              {product.description && (
+                <Text
+                  style={[
+                    styles.messageText,
+                    { color: item.sender === "user" ? "#fff" : "#000" },
+                  ]}
+                >
+                  {product.description}
+                </Text>
+              )}
+              {/* Nút Xem sản phẩm */}
+              {product.link.url && (
+                <TouchableOpacity
+                  style={styles.linkButton}
+                  onPress={() => {
+                    router.push(`/product-details/${product.link.url}`);
+                  }}
+                >
+                  <Text style={styles.linkButtonText}>Xem sản phẩm</Text>
+                </TouchableOpacity>
+              )}
+            </View>
+          ))}
+        </>
       ) : (
         <Text
           style={[
@@ -254,7 +386,9 @@ const CustomChatView = () => {
             { color: item.sender === "user" ? "#fff" : "#000" },
           ]}
         >
-          {item.text}
+          {item.text && typeof item.text === "string"
+            ? decodeHTML(item.text.replace(/<[^>]+>/g, ""))
+            : "Không có sản phẩm phù hợp."}
         </Text>
       )}
 
@@ -288,7 +422,7 @@ const CustomChatView = () => {
         data={messages}
         renderItem={renderItem}
         extraData={messages}
-        keyExtractor={(item) => item.id.toString()}
+        keyExtractor={(item) => item.id}
         style={styles.chatList}
         contentContainerStyle={{ paddingBottom: 20 }}
         onContentSizeChange={() =>
@@ -298,8 +432,9 @@ const CustomChatView = () => {
 
       {isTyping && (
         <View style={styles.typingIndicator}>
-          <ActivityIndicator size="small" color="#007AFF" />
-          <Text style={styles.typingText}>Bot đang nhập...</Text>
+          <Animated.View style={[styles.dot, { opacity: dot1Opacity }]} />
+          <Animated.View style={[styles.dot, { opacity: dot2Opacity }]} />
+          <Animated.View style={[styles.dot, { opacity: dot3Opacity }]} />
         </View>
       )}
 
@@ -308,16 +443,16 @@ const CustomChatView = () => {
           style={styles.input}
           value={inputText}
           onChangeText={setInputText}
-          placeholder="Nhập tin nhắn..."
+          placeholder="Ask everything u want."
           placeholderTextColor="#888"
           multiline
         />
         <TouchableOpacity
           style={styles.sendButton}
           onPress={handleSend}
-          disabled={isTyping}
+          disabled={isTyping || !userInfo?.id}
         >
-          <Text style={styles.sendButtonText}>Gửi</Text>
+          <Ionicons name="send" size={22} color="#fff" />
         </TouchableOpacity>
       </View>
     </KeyboardAvoidingView>
@@ -334,7 +469,7 @@ const styles = StyleSheet.create({
     borderRadius: 15,
   },
   userBubble: {
-    backgroundColor: "#007AFF",
+    backgroundColor: "#572FFF",
     alignSelf: "flex-end",
     borderBottomRightRadius: 5,
   },
@@ -347,43 +482,50 @@ const styles = StyleSheet.create({
   timestamp: { fontSize: 12, marginTop: 5, textAlign: "right" },
   inputContainer: {
     flexDirection: "row",
-    padding: 10,
-    borderTopWidth: 1,
-    borderColor: "#ccc",
-    backgroundColor: "#fff",
     alignItems: "center",
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    margin: 10,
+    backgroundColor: "#fff",
+    borderRadius: 30,
+    borderWidth: 1,
+    borderColor: "#ddd",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
   },
   input: {
     flex: 1,
-    borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 20,
-    padding: 10,
-    marginRight: 10,
+    paddingHorizontal: 16,
+    paddingVertical: Platform.OS === "ios" ? 10 : 8,
     fontSize: 16,
-    backgroundColor: "#f9f9f9",
-    maxHeight: 100,
-  },
+    color: "#000",
+  }, 
   sendButton: {
-    backgroundColor: "#007AFF",
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: 20,
+    backgroundColor: "#572FFF",
+    borderRadius: 25,
+    paddingVertical: 11,
+    paddingHorizontal: 11,
+    marginLeft: 8,
   },
-  sendButtonText: { color: "#fff", fontSize: 16, fontWeight: "bold" },
+  sendButtonText: {
+    color: "#fff",
+    fontWeight: "bold",
+  },
   typingIndicator: {
     flexDirection: "row",
     alignItems: "center",
     padding: 10,
-    backgroundColor: "#fff",
-    borderTopWidth: 1,
+    backgroundColor: "#f5f5f5",
     borderColor: "#ccc",
   },
   typingText: { marginLeft: 10, color: "#666", fontSize: 14 },
   linkButton: {
-    marginTop: 8,
-    backgroundColor: "#007AFF",
-    paddingVertical: 6,
+    marginTop: 6,
+    backgroundColor: "#572FFF",
+    paddingVertical: 7,
     paddingHorizontal: 12,
     borderRadius: 12,
     alignSelf: "flex-start",
@@ -392,6 +534,13 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 14,
     fontWeight: "bold",
+  },
+  dot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: "#572FFF",
+    marginHorizontal: 2,
   },
 });
 
