@@ -79,7 +79,7 @@ const ProductDetails = (props: Props) => {
 
   const handleBuyNow = async () => {
     if (!product?.id) {
-      Alert.alert("Lỗi", "Không tìm thấy sản phẩm.");
+      Alert.alert("Lỗi", "Product not found!");
       return;
     }
 
