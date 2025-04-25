@@ -143,53 +143,91 @@ const CustomChatView = () => {
   }, [userInfo]);
 
   // Hàm parseBotMessage
-  const parseBotMessage = (htmlText: string): { products: Product[] } => {
-    console.log("Parsing input:", htmlText);
+  const parseBotMessage = (text: string): { products: Product[] } => {
+    console.log("Parsing input:", text);
 
-    // Tách các sản phẩm dựa trên dòng bắt đầu bằng "Giá của"
-    const productSections = htmlText
-      .split(/(?=Giá của)/) // Tách tại vị trí bắt đầu bằng "Giá của" mà không loại bỏ pattern
-      .filter((section) => section.trim())
-      .filter((section) => section.includes("<a href")); // Chỉ giữ các section có liên kết
+    const products: Product[] = [];
 
-    const products: Product[] = productSections
-      .map((section) => {
-        const linkMatch = section.match(
-          /<a href="myapp:\/\/product\/(.*?)">(.*?)<\/a>/
-        );
-        const link = linkMatch
-          ? { url: linkMatch[1], label: linkMatch[2] }
-          : null;
+    // Chia nhỏ văn bản thành từng phần sản phẩm
+    const productSections = text
+      .split("\n\n")
+      .filter((section) => section.trim());
 
-        const lines = section.split("\n").filter((line) => line.trim());
-        let price = "";
-        let description = "";
+    const sectionsToProcess =
+      productSections.length > 0 ? productSections : [text];
 
-        for (const line of lines) {
-          if (line.includes("Giá")) {
-            price = line
-              .replace(
-                /.*Giá\s*(?:của\s*(?:sản phẩm\s*(?:là)?)?)?\s*([0-9.]+|price)\.?\s*/,
-                "$1"
-              )
-              .trim();
-          } else if (!line.includes("<a href")) {
-            description = line.trim();
+    for (const section of sectionsToProcess) {
+      const lines = section.split("\n").filter((line) => line.trim());
+
+      let price = "";
+      let description = "";
+      let link = { url: "", label: "" };
+
+      for (const line of lines) {
+        if (line.includes("có giá")) {
+          const priceMatch = line.match(/có giá (\d+)/);
+          if (priceMatch) {
+            const formattedPrice = Number(priceMatch[1]).toLocaleString(
+              "vi-VN"
+            );
+            price = `${formattedPrice} VNĐ`;
+            // Lấy tên sản phẩm từ đầu dòng làm label
+            link.label = line.split(" có giá")[0].trim();
+          }
+        } else if (line.includes("Giá của")) {
+          // Format: "Giá của [tên sản phẩm] là [giá]"
+          const priceMatch = line.match(/Giá của (.*?) là (\d+)/);
+          if (priceMatch) {
+            const formattedPrice = Number(priceMatch[2]).toLocaleString(
+              "vi-VN"
+            );
+            price = `${formattedPrice} VNĐ`;
+            if (!link.label) {
+              link.label = priceMatch[1].trim();
+            }
+          }
+        } else if (line.includes("Giá") && line.includes("là")) {
+          const priceMatch = line.match(/là (\d+)/);
+          if (priceMatch) {
+            const formattedPrice = Number(priceMatch[1]).toLocaleString(
+              "vi-VN"
+            );
+            price = `${formattedPrice} VNĐ`;
           }
         }
 
-        return {
-          price: price === "price" ? "Không có thông tin giá." : price,
+        // Trích xuất ID sản phẩm
+        if (line.includes("Bạn có thể xem sản phẩm")) {
+          const idMatch = line.match(/([a-f0-9-]{36})/);
+          link.url = idMatch ? idMatch[1] : "";
+        }
+
+        if (line.includes(" - ")) {
+          description = line.trim();
+          if (!link.label) {
+            const labelMatch = line.match(/^([^-]+) -/);
+            if (labelMatch) {
+              link.label = labelMatch[1].trim();
+            }
+          }
+        }
+      }
+
+      if (link.url) {
+        products.push({
+          price: price || "Không có thông tin giá",
           description,
-          link: link || { url: "", label: "" },
-        };
-      })
-      .filter((product) => product.link.url);
+          link: {
+            url: link.url,
+            label: link.label || "Sản phẩm",
+          },
+        });
+      }
+    }
 
     console.log("Parsed products:", products);
     return { products };
   };
-
   // Xử lý gửi tin nhắn qua API PostMessage
   const handleSend = async () => {
     if (!inputText.trim() || !userInfo?.id) return;
@@ -310,8 +348,7 @@ const CustomChatView = () => {
       ]}
     >
       {item.products && item.products.length > 0 ? (
-        <>
-          {/* Hiển thị dòng giới thiệu nếu có */}
+        <View>
           {item.text.includes("Chúng tôi có một vài gợi ý") && (
             <Text
               style={[
@@ -329,7 +366,7 @@ const CustomChatView = () => {
           {item.products.map((product, index) => (
             <View key={index} style={{ marginBottom: 5 }}>
               {/* Tiêu đề sản phẩm */}
-              {product.link.label && (
+              {product.link.label ? (
                 <Text
                   style={[
                     styles.messageText,
@@ -342,9 +379,9 @@ const CustomChatView = () => {
                 >
                   {product.link.label}
                 </Text>
-              )}
+              ) : null}
               {/* Giá sản phẩm */}
-              {product.price && (
+              {product.price ? (
                 <Text
                   style={[
                     styles.messageText,
@@ -353,9 +390,9 @@ const CustomChatView = () => {
                 >
                   {product.price}
                 </Text>
-              )}
+              ) : null}
               {/* Mô tả sản phẩm */}
-              {product.description && (
+              {product.description ? (
                 <Text
                   style={[
                     styles.messageText,
@@ -364,9 +401,9 @@ const CustomChatView = () => {
                 >
                   {product.description}
                 </Text>
-              )}
+              ) : null}
               {/* Nút Xem sản phẩm */}
-              {product.link.url && (
+              {product.link.url ? (
                 <TouchableOpacity
                   style={styles.linkButton}
                   onPress={() => {
@@ -375,10 +412,10 @@ const CustomChatView = () => {
                 >
                   <Text style={styles.linkButtonText}>Xem sản phẩm</Text>
                 </TouchableOpacity>
-              )}
+              ) : null}
             </View>
           ))}
-        </>
+        </View>
       ) : (
         <Text
           style={[
@@ -502,7 +539,7 @@ const styles = StyleSheet.create({
     paddingVertical: Platform.OS === "ios" ? 10 : 8,
     fontSize: 16,
     color: "#000",
-  }, 
+  },
   sendButton: {
     backgroundColor: "#572FFF",
     borderRadius: 25,

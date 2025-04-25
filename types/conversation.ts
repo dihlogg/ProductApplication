@@ -10,4 +10,5 @@ interface Message {
   timestamp: string;
   link?: { url: string; label: string };
   products?: Product[];
+  imageUrl?: string;
 }
