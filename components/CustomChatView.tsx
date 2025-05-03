@@ -164,34 +164,32 @@ const CustomChatView = () => {
       let link = { url: "", label: "" };
 
       for (const line of lines) {
+        // Xử lý giá có hoặc không có dấu chấm (ví dụ: 3.690.000 hoặc 29990000)
         if (line.includes("có giá")) {
-          const priceMatch = line.match(/có giá (\d+)/);
+          const priceMatch = line.match(/có giá ([\d.]+)/);
           if (priceMatch) {
-            const formattedPrice = Number(priceMatch[1]).toLocaleString(
-              "vi-VN"
-            );
+            // Chuyển chuỗi giá thành số và định dạng lại
+            const rawPrice = priceMatch[1].replace(/\./g, ""); // Loại bỏ dấu chấm
+            const formattedPrice = Number(rawPrice).toLocaleString("vi-VN");
             price = `${formattedPrice} VNĐ`;
-            // Lấy tên sản phẩm từ đầu dòng làm label
             link.label = line.split(" có giá")[0].trim();
           }
         } else if (line.includes("Giá của")) {
-          // Format: "Giá của [tên sản phẩm] là [giá]"
-          const priceMatch = line.match(/Giá của (.*?) là (\d+)/);
+          // Định dạng: "Giá của [tên sản phẩm] là [giá]"
+          const priceMatch = line.match(/Giá của (.*?) là ([\d.]+)/);
           if (priceMatch) {
-            const formattedPrice = Number(priceMatch[2]).toLocaleString(
-              "vi-VN"
-            );
+            const rawPrice = priceMatch[2].replace(/\./g, "");
+            const formattedPrice = Number(rawPrice).toLocaleString("vi-VN");
             price = `${formattedPrice} VNĐ`;
             if (!link.label) {
               link.label = priceMatch[1].trim();
             }
           }
         } else if (line.includes("Giá") && line.includes("là")) {
-          const priceMatch = line.match(/là (\d+)/);
+          const priceMatch = line.match(/là ([\d.]+)/);
           if (priceMatch) {
-            const formattedPrice = Number(priceMatch[1]).toLocaleString(
-              "vi-VN"
-            );
+            const rawPrice = priceMatch[1].replace(/\./g, "");
+            const formattedPrice = Number(rawPrice).toLocaleString("vi-VN");
             price = `${formattedPrice} VNĐ`;
           }
         }

@@ -12,7 +12,6 @@ import {
 import React, { useEffect, useState } from "react";
 import { router, Stack, useLocalSearchParams, useRouter } from "expo-router";
 import axios from "axios";
-import { ProductType } from "@/types/type";
 import ImageSlider from "@/components/ImageSlider";
 import { Ionicons } from "@expo/vector-icons";
 import { Colors } from "@/constants/Colors";
@@ -24,6 +23,7 @@ import { addToCart } from "@/service/cartService";
 import { useNavigation } from "@react-navigation/native";
 import SimilarProducts from "@/components/SimilarProducts";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { ProductType } from "@/types/type";
 
 type Props = {};
 
