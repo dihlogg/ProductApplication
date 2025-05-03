@@ -16,6 +16,7 @@ import { router } from "expo-router";
 import axios from "axios";
 import { API_ENDPOINTS } from "@/service/apiService";
 import { Ionicons } from "@expo/vector-icons";
+import { Message, Product } from "@/types/conversation";
 
 const decodeHTML = (html: string) => {
   const entities: { [key: string]: string } = {

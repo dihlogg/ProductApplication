@@ -1,9 +1,9 @@
-interface Product {
+export interface Product {
   price: string;
   description: string;
   link: { url: string; label: string };
 }
-interface Message {
+export interface Message {
   id: string;
   text: string;
   sender: "user" | "bot";
