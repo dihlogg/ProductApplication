@@ -1,13 +1,14 @@
+import { config } from "@/config/config";
 import { HubConnectionBuilder } from "@microsoft/signalr";
 
-const API_URL = "http://192.168.1.123:5117";
+const API_BASE_URL = config.API_URL;
 
 const connectSignalR = async (
   userId: string | null | undefined,
   getCartData: () => Promise<void>
 ) => {
   const connection = new HubConnectionBuilder()
-    .withUrl(`${API_URL}/cartHub?userId=${userId}`)
+    .withUrl(`${API_BASE_URL}/cartHub?userId=${userId}`)
     .withAutomaticReconnect()
     .build();
 

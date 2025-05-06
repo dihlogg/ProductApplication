@@ -8,27 +8,26 @@ import {
   TouchableOpacity,
   KeyboardAvoidingView,
   Platform,
-  ActivityIndicator,
   Animated,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { router } from "expo-router";
 import axios from "axios";
 import { API_ENDPOINTS } from "@/service/apiService";
 import { Ionicons } from "@expo/vector-icons";
 import { Message, Product } from "@/types/conversation";
+import { router } from "expo-router";
+import { parseBotMessage } from "@/utils/parseBotMessage";
+import { HubConnection } from "@microsoft/signalr";
+import connectChatSignalR from "@/service/connectChatSignalR";
 
 const decodeHTML = (html: string) => {
   const entities: { [key: string]: string } = {
-    "&": "&",
-    "<": "<",
-    ">": ">",
-    '"': '"',
-    "'": "'",
+    "&amp;": "&",
+    "&lt;": "<",
+    "&gt;": ">",
     "&quot;": '"',
     "&apos;": "'",
     "&nbsp;": " ",
-    "&amp;": "&",
   };
 
   return html.replace(
@@ -36,12 +35,14 @@ const decodeHTML = (html: string) => {
     (match) => entities[match] || match
   );
 };
+
 const CustomChatView = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputText, setInputText] = useState<string>("");
   const [userInfo, setUserInfo] = useState<any>(null);
   const [isTyping, setIsTyping] = useState(false);
   const flatListRef = useRef<FlatList>(null);
+  const signalRConnection = useRef<HubConnection | undefined>(null);
 
   const dot1Opacity = useRef(new Animated.Value(0.3)).current;
   const dot2Opacity = useRef(new Animated.Value(0.3)).current;
@@ -83,19 +84,68 @@ const CustomChatView = () => {
     }
   }, [isTyping]);
 
-  // Lấy thông tin người dùng từ AsyncStorage
+  // Lấy thông tin người dùng từ AsyncStorage và thiết lập SignalR
   useEffect(() => {
-    const fetchUser = async () => {
+    const fetchUserInfoAndConnect = async () => {
       try {
-        const userInfo = await AsyncStorage.getItem("userInfo");
-        if (userInfo) {
-          setUserInfo(JSON.parse(userInfo));
-        }
+        const userData = await AsyncStorage.getItem("userInfo");
+        if (!userData) return;
+
+        const user = JSON.parse(userData);
+        setUserInfo(user);
+
+        if (!user.id) return;
+
+        console.log(`Connecting SignalR for user: ${user.id}`);
+        const connection = await connectChatSignalR(
+          user.id,
+          async (messageText: string, sender: string) => {
+            // Xử lý tin nhắn nhận được từ SignalR
+            let products: Product[] | undefined = undefined;
+            if (sender === "bot") {
+              try {
+                const parsedJson = JSON.parse(messageText);
+                if (Array.isArray(parsedJson) && parsedJson[0]?.output) {
+                  messageText = parsedJson[0].output;
+                  products = parseBotMessage(messageText).products;
+                } else {
+                  products = parseBotMessage(messageText).products;
+                }
+              } catch (e) {
+                console.warn("Failed to parse bot message JSON:", messageText);
+                products = parseBotMessage(messageText).products;
+              }
+            }
+
+            const newMessage: Message = {
+              id: Date.now().toString(),
+              text: messageText,
+              sender: sender as "user" | "bot",
+              timestamp: new Date().toISOString(),
+              products,
+            };
+
+            setMessages((prevMessages) => [...prevMessages, newMessage]);
+            setIsTyping(false);
+
+            setTimeout(() => {
+              flatListRef.current?.scrollToEnd({ animated: true });
+            }, 100);
+          }
+        );
+
+        signalRConnection.current = connection;
+
+        return () => {
+          console.log("Stopping SignalR connection");
+          signalRConnection.current?.stop();
+        };
       } catch (error) {
-        console.error("Error fetching user info:", error);
+        console.error("Error fetching user info or connecting SignalR:", error);
       }
     };
-    fetchUser();
+
+    fetchUserInfoAndConnect();
   }, []);
 
   // Lấy lịch sử chat từ API GetMessages
@@ -110,7 +160,6 @@ const CustomChatView = () => {
           let messageText = msg.message;
           let products: Product[] | undefined = undefined;
 
-          // Xử lý tin nhắn bot dạng JSON
           if (msg.sender === "bot") {
             try {
               const parsedJson = JSON.parse(msg.message);
@@ -143,94 +192,10 @@ const CustomChatView = () => {
     loadMessagesFromServer();
   }, [userInfo]);
 
-  // Hàm parseBotMessage
-  const parseBotMessage = (text: string): { products: Product[] } => {
-    console.log("Parsing input:", text);
-
-    const products: Product[] = [];
-
-    // Chia nhỏ văn bản thành từng phần sản phẩm
-    const productSections = text
-      .split("\n\n")
-      .filter((section) => section.trim());
-
-    const sectionsToProcess =
-      productSections.length > 0 ? productSections : [text];
-
-    for (const section of sectionsToProcess) {
-      const lines = section.split("\n").filter((line) => line.trim());
-
-      let price = "";
-      let description = "";
-      let link = { url: "", label: "" };
-
-      for (const line of lines) {
-        // Xử lý giá có hoặc không có dấu chấm (ví dụ: 3.690.000 hoặc 29990000)
-        if (line.includes("có giá")) {
-          const priceMatch = line.match(/có giá ([\d.]+)/);
-          if (priceMatch) {
-            // Chuyển chuỗi giá thành số và định dạng lại
-            const rawPrice = priceMatch[1].replace(/\./g, ""); // Loại bỏ dấu chấm
-            const formattedPrice = Number(rawPrice).toLocaleString("vi-VN");
-            price = `${formattedPrice} VNĐ`;
-            link.label = line.split(" có giá")[0].trim();
-          }
-        } else if (line.includes("Giá của")) {
-          // Định dạng: "Giá của [tên sản phẩm] là [giá]"
-          const priceMatch = line.match(/Giá của (.*?) là ([\d.]+)/);
-          if (priceMatch) {
-            const rawPrice = priceMatch[2].replace(/\./g, "");
-            const formattedPrice = Number(rawPrice).toLocaleString("vi-VN");
-            price = `${formattedPrice} VNĐ`;
-            if (!link.label) {
-              link.label = priceMatch[1].trim();
-            }
-          }
-        } else if (line.includes("Giá") && line.includes("là")) {
-          const priceMatch = line.match(/là ([\d.]+)/);
-          if (priceMatch) {
-            const rawPrice = priceMatch[1].replace(/\./g, "");
-            const formattedPrice = Number(rawPrice).toLocaleString("vi-VN");
-            price = `${formattedPrice} VNĐ`;
-          }
-        }
-
-        // Trích xuất ID sản phẩm
-        if (line.includes("Bạn có thể xem sản phẩm")) {
-          const idMatch = line.match(/([a-f0-9-]{36})/);
-          link.url = idMatch ? idMatch[1] : "";
-        }
-
-        if (line.includes(" - ")) {
-          description = line.trim();
-          if (!link.label) {
-            const labelMatch = line.match(/^([^-]+) -/);
-            if (labelMatch) {
-              link.label = labelMatch[1].trim();
-            }
-          }
-        }
-      }
-
-      if (link.url) {
-        products.push({
-          price: price || "Không có thông tin giá",
-          description,
-          link: {
-            url: link.url,
-            label: link.label || "Sản phẩm",
-          },
-        });
-      }
-    }
-
-    console.log("Parsed products:", products);
-    return { products };
-  };
-  // Xử lý gửi tin nhắn qua API PostMessage
+  // Xử lý gửi tin nhắn qua SignalR
   const handleSend = async () => {
-    if (!inputText.trim() || !userInfo?.id) return;
-
+    if (!inputText.trim() || !userInfo?.id || !signalRConnection.current)
+      return;
     const userMessage: Message = {
       id: Date.now().toString(),
       text: inputText,
@@ -238,23 +203,27 @@ const CustomChatView = () => {
       timestamp: new Date().toISOString(),
     };
 
-    const updatedMessages = [...messages, userMessage];
-    setMessages(updatedMessages);
+    setMessages((prevMessages) => [...prevMessages, userMessage]);
     setInputText("");
     setIsTyping(true);
 
     try {
-      console.log("Sending to PostMessage:", {
-        Message: inputText,
-        UserId: userInfo.id,
-      });
+      // Gửi tin nhắn qua SignalR với sender = user
+      await signalRConnection.current.invoke(
+        "SendMessage",
+        userInfo.id,
+        inputText,
+        "user"
+      );
+      console.log("Message sent via SignalR");
+
+      // Gọi API PostMessage để xử lý tin nhắn bot
       const response = await axios.post(`${API_ENDPOINTS.POST_MESSAGE}`, {
         Message: inputText,
         UserId: userInfo.id,
       });
       console.log("PostMessage Response:", response.status, response.data);
 
-      // Xử lý response từ API
       let aiText = response.data;
       if (Array.isArray(response.data) && response.data[0]?.output) {
         aiText = response.data[0].output;
@@ -266,57 +235,13 @@ const CustomChatView = () => {
         throw new Error("Invalid response format from PostMessage API");
       }
 
-      const { products } = parseBotMessage(aiText);
-      console.log("Parsed Products:", products);
-
-      const botMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        text: aiText,
-        sender: "bot",
-        timestamp: new Date().toISOString(),
-        products,
-      };
-      console.log("Bot Message:", botMessage);
-
-      const finalMessages = [...updatedMessages, botMessage];
-      setMessages(finalMessages);
-
-      // Tải lại lịch sử chat từ server
-      console.log("Fetching GetMessages for UserId:", userInfo.id);
-      const refreshResponse = await axios.get(
-        `${API_ENDPOINTS.GET_MESSAGES}/${userInfo.id}`
+      // Gửi phản hồi của bot qua SignalR với sender="bot"
+      await signalRConnection.current.invoke(
+        "SendMessage",
+        userInfo.id,
+        aiText,
+        "bot"
       );
-      console.log("GetMessages Response:", refreshResponse.data);
-      const serverMessages = refreshResponse.data.map((msg: any) => {
-        let messageText = msg.message;
-        let products: Product[] | undefined = undefined;
-
-        // Xử lý tin nhắn bot dạng JSON
-        if (msg.sender === "bot") {
-          try {
-            const parsedJson = JSON.parse(msg.message);
-            if (Array.isArray(parsedJson) && parsedJson[0]?.output) {
-              messageText = parsedJson[0].output;
-              products = parseBotMessage(messageText).products;
-            } else {
-              products = parseBotMessage(messageText).products;
-            }
-          } catch (e) {
-            console.warn("Failed to parse bot message JSON:", msg.message);
-            products = parseBotMessage(messageText).products;
-          }
-        }
-
-        return {
-          id: msg.id,
-          text: messageText,
-          sender: msg.sender,
-          timestamp: msg.timestamp,
-          products,
-        };
-      });
-      console.log("Server Messages:", serverMessages);
-      setMessages(serverMessages);
     } catch (error: any) {
       console.error(
         "Error in handleSend:",
@@ -329,8 +254,7 @@ const CustomChatView = () => {
         sender: "bot",
         timestamp: new Date().toISOString(),
       };
-      setMessages([...updatedMessages, errorMessage]);
-    } finally {
+      setMessages((prevMessages) => [...prevMessages, errorMessage]);
       setIsTyping(false);
     }
 
@@ -361,10 +285,8 @@ const CustomChatView = () => {
               {item.text.split("\n")[0]}
             </Text>
           )}
-          {/* Hiển thị danh sách sản phẩm */}
           {item.products.map((product, index) => (
             <View key={index} style={{ marginBottom: 5 }}>
-              {/* Tiêu đề sản phẩm */}
               {product.link.label ? (
                 <Text
                   style={[
@@ -379,7 +301,6 @@ const CustomChatView = () => {
                   {product.link.label}
                 </Text>
               ) : null}
-              {/* Giá sản phẩm */}
               {product.price ? (
                 <Text
                   style={[
@@ -390,7 +311,6 @@ const CustomChatView = () => {
                   {product.price}
                 </Text>
               ) : null}
-              {/* Mô tả sản phẩm */}
               {product.description ? (
                 <Text
                   style={[
@@ -401,7 +321,6 @@ const CustomChatView = () => {
                   {product.description}
                 </Text>
               ) : null}
-              {/* Nút Xem sản phẩm */}
               {product.link.url ? (
                 <TouchableOpacity
                   style={styles.linkButton}
@@ -557,7 +476,6 @@ const styles = StyleSheet.create({
     backgroundColor: "#f5f5f5",
     borderColor: "#ccc",
   },
-  typingText: { marginLeft: 10, color: "#666", fontSize: 14 },
   linkButton: {
     marginTop: 6,
     backgroundColor: "#572FFF",
