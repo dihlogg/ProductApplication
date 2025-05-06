@@ -1,4 +1,6 @@
-const API_BASE_URL = "http://192.168.1.123:5117";
+import { config } from "@/config/config";
+
+const API_BASE_URL = config.API_URL;
 
 export const API_ENDPOINTS = {
     GET_CART_INFO: `${API_BASE_URL}/CartInfo/GetCartInfos`,
