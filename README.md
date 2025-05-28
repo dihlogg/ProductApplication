@@ -2,7 +2,7 @@
 
 This is the mobile frontend of an intelligent E-commerce system. The app is developed with React Native + Expo, supporting a complete shopping experience for customers, from product discovery to checkout, enhanced with AI-powered recommendation, real-time cart updates, and automated order processing.
 
-## Versions
+## Technologies
 [![React Native](https://img.shields.io/badge/React_Native-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)](https://reactnative.dev)
 [![Expo](https://img.shields.io/badge/Expo-000020?style=for-the-badge&logo=expo&logoColor=white)](https://expo.dev)
 
@@ -32,7 +32,6 @@ _Admin features are managed via the backend API and are not exposed in this mobi
 📲 Getting Started
 1. 📦 Clone the repository
 git clone https://github.com/dihlogg/ProductApplication.git
-cd ProductApplication
 2. ▶️ Start development server
  ```bash
    npm install
