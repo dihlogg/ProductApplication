@@ -1,35 +1,33 @@
- E-commerce Mobile Application (React Native)
- This is the mobile frontend of an intelligent E-commerce system. The app is developed with React Native + Expo, supporting a complete shopping experience for customers, from product discovery to checkout, enhanced with AI-powered recommendation, real-time cart updates, and automated order processing.
- Versions
-<a href="https://reactnative.dev">
-  <img height="24" src="https://img.shields.io/badge/React_Native-20232A?style=for-the-badge&logo=react&logoColor=61DAFB">
-</a>
-<a href="https://expo.dev">
-  <img height="24" src="https://img.shields.io/badge/Expo-000020?style=for-the-badge&logo=expo&logoColor=white">
-</a>
-Key Features
-👤 Customer Functions
-Registration & Login: Secure user authentication system.
+# E-commerce Mobile Application (React Native)
 
-Product Search & Filtering: Search products with multi-filter support.
+This is the mobile frontend of an intelligent E-commerce system. The app is developed with React Native + Expo, supporting a complete shopping experience for customers, from product discovery to checkout, enhanced with AI-powered recommendation, real-time cart updates, and automated order processing.
 
-Purchasing: Add-to-cart, checkout, and order placement.
+## Versions
+[![React Native](https://img.shields.io/badge/React_Native-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)](https://reactnative.dev)
+[![Expo](https://img.shields.io/badge/Expo-000020?style=for-the-badge&logo=expo&logoColor=white)](https://expo.dev)
 
-AI Chatbot: Real-time chatbot integrated into the app using WebView (Chatwoot or custom).
+---
 
-Real-Time Cart Management: Sync cart between mobile and web using SignalR.
+## 🔑 Key Features
 
-Order History: View past orders and details.
+### 👤 Customer Functions
+- **Registration & Login**: Secure user authentication system.  
+- **Product Search & Filtering**: Search products with multi-filter support.  
+- **Purchasing**: Add-to-cart, checkout, and order placement.  
+- **AI Chatbot**: Real-time chatbot integrated into the app using WebView (Chatwoot or custom).  
+- **Real-Time Cart Management**: Sync cart between mobile and web using SignalR.  
+- **Order History**: View past orders and details.  
+- **Order Confirmation via Email**: Automated email using n8n.  
+- **Product Recommendation**: AI-powered recommendations using K-Means clustering (ML.NET).  
 
-Order Confirmation via Email: Automated email using n8n.
+### 🛠️ Admin Functions (via Backend API)
+- CRUD for Products & Categories  
+- User Management  
+- Order Management  
 
-Product Recommendation: AI-powered recommendations using K-Means clustering (ML.NET).
+_Admin features are managed via the backend API and are not exposed in this mobile client._
 
-🛠️ Admin Functions (via Backend API)
-CRUD for Products & Categories
-User Management
-Order Management
-Admin features are managed via the backend API and are not exposed in this mobile client.
+---
 
 📲 Getting Started
 1. 📦 Clone the repository
