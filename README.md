@@ -36,7 +36,7 @@ git clone https://github.com/dihlogg/ProductApplication.git
  ```bash
    npm install
    ```
-```bash
-    npx expo start
+ ```bash
+   npx expo start
    ```
 Make sure you have the Expo Go app installed on your device or emulator.
