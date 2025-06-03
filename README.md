@@ -39,4 +39,5 @@ git clone https://github.com/dihlogg/ProductApplication.git
  ```bash
    npx expo start
    ```
-Make sure you have the Expo Go app installed on your device or emulator.
+🎬 Watch this live demo video to better understand the product’s features and usage.
+[[Watch Video Demo]](https://drive.google.com/file/d/1AqpAQcwJ9f73i0__EHJVG2ljsTfw0Ayv/view)
